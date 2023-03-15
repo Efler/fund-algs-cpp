@@ -65,7 +65,7 @@ public:
                     if(st.first != "console"){
                         stream->open(st.first, ofstream::app);
                         if(!stream->is_open()){
-                            throw logic_error("hi");
+                            throw logic_error("Could not open a file!");
                         }
                     }else{
                         stream = nullptr;
@@ -95,7 +95,9 @@ public:
             if(_streams[st.first].second > 1){
                 _streams[st.first].second--;
             }else{
-                _streams[st.first].first->close();
+                if(_streams[st.first].first != nullptr){
+                    _streams[st.first].first->close();
+                }
                 delete _streams[st.first].first;
                 _streams.erase(st.first);
             }
@@ -125,11 +127,11 @@ public:
             }
             if (st.second.first == nullptr)
             {
-                cout << current_datetime_to_string() << str_severity.at(severity) << " " << to_log << endl;
+                cout << "[" << current_datetime_to_string() << "]" << "[" << str_severity.at(severity) << "] " << to_log << endl;
             }
             else
             {
-                (*st.second.first) << current_datetime_to_string() << str_severity.at(severity) << " " << to_log << endl;
+                (*st.second.first) << "[" << current_datetime_to_string() << "]" << "[" << str_severity.at(severity) << "] " << to_log << endl;
             }
         }
         return this;
@@ -137,4 +139,4 @@ public:
 
 };
 
-
+map<string, pair<ofstream*, size_t>> logger::_streams = map<string, pair<ofstream*, size_t>>();

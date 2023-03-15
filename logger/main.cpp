@@ -12,6 +12,7 @@ int main(){
             ->add_stream("console", logger::severity::debug)
             ->build();
     logger_1->log("darova", logger::severity::information);
+    logger_2->log("nihua sebe", logger::severity::debug);
 
     delete logger_1;
     delete logger_2;

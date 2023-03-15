@@ -1,0 +1,12 @@
+# ninja log v5
+0	535	7005938560538674	CMakeFiles/logger.dir/main.cpp.obj	c6b0cdfa4ca97614
+2	500	7005940905697101	CMakeFiles/logger.dir/main.cpp.obj	c6b0cdfa4ca97614
+500	605	7005940906737256	logger.exe	2634d43a37a71cdf
+2	482	7005946274687895	CMakeFiles/logger.dir/main.cpp.obj	c6b0cdfa4ca97614
+482	579	7005946275634278	logger.exe	2634d43a37a71cdf
+1	489	7005947368211222	CMakeFiles/logger.dir/main.cpp.obj	c6b0cdfa4ca97614
+490	595	7005947369259492	logger.exe	2634d43a37a71cdf
+2	534	7005949643965296	CMakeFiles/logger.dir/main.cpp.obj	c6b0cdfa4ca97614
+534	641	7005949645010838	logger.exe	2634d43a37a71cdf
+1	523	7005951880695334	CMakeFiles/logger.dir/main.cpp.obj	c6b0cdfa4ca97614
+523	633	7005951881774570	logger.exe	2634d43a37a71cdf
