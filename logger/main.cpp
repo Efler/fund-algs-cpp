@@ -3,9 +3,9 @@
 
 int main(){
 
-    logger* logger_1;
-    logger* logger_2;
-    logger* logger_3;
+    logger* logger_1 = nullptr;
+    logger* logger_2 = nullptr;
+    logger* logger_3 = nullptr;
 
     auto* builder = new logger_builder();
     builder->add_stream("D:\\JetBrains\\tester_files_(yan)\\logger1.txt", logger::severity::information)
