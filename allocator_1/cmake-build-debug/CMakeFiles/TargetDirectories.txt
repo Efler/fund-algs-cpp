@@ -1,0 +1,3 @@
+D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_1/cmake-build-debug/CMakeFiles/allocator_1.dir
+D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_1/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
