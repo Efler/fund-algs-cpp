@@ -1,4 +1,4 @@
-#include "logger.h"
+#include "logger_config.h"
 
 class logger_builder
 {

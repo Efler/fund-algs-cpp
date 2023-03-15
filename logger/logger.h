@@ -12,6 +12,7 @@ using namespace std;
 class logger
 {
     friend class logger_builder;
+    friend class logger_config;
 
 public:
 
@@ -84,6 +85,35 @@ public:
 //            cout << l.first << " " << l.second.second << endl;
 //        }
         //////////////////////debug
+    }
+
+    explicit logger(const string& config){
+        ifstream conf;
+        size_t flag = 0;
+        string path = "";
+        string severity = "";
+        char ch = '@';
+        conf.open(config);
+        if(!conf.is_open()){
+            throw logic_error("Could not open a file!");
+        }
+        while(!conf.eof()){
+            conf.get(ch);
+            if(ch == EOF || ch == ' ' || ch == '\n'){
+                if(flag == 0){
+                    flag++;
+                }else{
+                    flag = 0;
+
+                }
+            }else{
+                if(flag == 0){
+                    path += ch;
+                }else{
+                    severity += ch;
+                }
+            }
+        }
     }
 
     logger(logger const &) = delete;

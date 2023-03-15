@@ -69,7 +69,7 @@
 			},
 			"sourceIndexes" : 
 			[
-				2
+				3
 			]
 		}
 	],
@@ -107,14 +107,15 @@
 			"sourceIndexes" : 
 			[
 				0,
-				1
+				1,
+				2
 			]
 		},
 		{
 			"name" : "Source Files",
 			"sourceIndexes" : 
 			[
-				2
+				3
 			]
 		}
 	],
@@ -128,6 +129,11 @@
 		{
 			"backtrace" : 1,
 			"path" : "logger_builder.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "logger_config.h",
 			"sourceGroupIndex" : 0
 		},
 		{

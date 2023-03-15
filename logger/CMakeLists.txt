@@ -8,4 +8,5 @@ include_directories(.)
 add_executable(logger
         logger.h
         logger_builder.h
+        logger_config.h
         main.cpp)
