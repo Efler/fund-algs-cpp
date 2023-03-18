@@ -37,7 +37,12 @@ public:
                     flag++;
                 }else{
                     flag = 0;
-                    _streams_logger[path] = sev_severity.at(severity);
+                    try{
+                        _streams_logger[path] = sev_severity.at(severity);
+                    }catch(std::out_of_range& ex){
+                        conf.close();
+                        throw logic_error("Wrong severity!");
+                    }
                     path = "";
                     severity = "";
                     ch = '@';
