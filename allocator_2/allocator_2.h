@@ -125,7 +125,7 @@ public:
         *(reinterpret_cast<size_t*>(p_memory)) = size - (sizeof(size_t) + sizeof(mode) + sizeof(shared_ptr<logger>) + sizeof(void*)+ sizeof(void*) + sizeof(size_t));
     }
 
-    ~allocator_2(){
+    ~allocator_2() override {
         ::operator delete(_memory);
     }
 

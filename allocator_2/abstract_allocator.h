@@ -10,4 +10,6 @@ public:
 
     virtual void deallocate(void* target_to_dealloc) const = 0;
 
+    virtual ~abstract_allocator() = default;
+
 };
