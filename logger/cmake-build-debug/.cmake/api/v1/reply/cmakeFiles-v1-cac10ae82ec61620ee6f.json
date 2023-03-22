@@ -7,6 +7,11 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
+			"path" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/share/cmake-3.23/Modules/CMakeMinGWFindMake.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
 			"path" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/share/cmake-3.23/Modules/CMakeDetermineSystem.cmake"
 		},
 		{
@@ -534,6 +539,21 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
+			"path" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/share/cmake-3.23/Modules/CMakeFindCodeBlocks.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/share/cmake-3.23/Modules/CMakeExtraGeneratorDetermineCompilerMacrosAndIncludeDirs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/share/cmake-3.23/Modules/ProcessorCount.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
 			"path" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/share/cmake-3.23/Modules/CMakeCInformation.cmake"
 		},
 		{
@@ -767,8 +787,8 @@
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_1/cmake-build-debug",
-		"source" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_1"
+		"build" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/logger/cmake-build-debug",
+		"source" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/logger"
 	},
 	"version" : 
 	{

@@ -149,8 +149,8 @@
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/logger/cmake-build-debug",
-		"source" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/logger"
+		"build" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_2/cmake-build-debug",
+		"source" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_2"
 	},
 	"version" : 
 	{

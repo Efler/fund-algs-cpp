@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "d:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/logger/cmake-build-debug"
+			"value" : "d:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_2/cmake-build-debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -623,7 +623,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/logger"
+			"value" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_2"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -635,7 +635,7 @@
 				}
 			],
 			"type" : "PATH",
-			"value" : "C:/Program Files (x86)/logger"
+			"value" : "C:/Program Files (x86)/allocator_2"
 		},
 		{
 			"name" : "CMAKE_LINKER",
@@ -851,7 +851,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "logger"
+			"value" : "allocator_2"
 		},
 		{
 			"name" : "CMAKE_RANLIB",
@@ -1230,7 +1230,7 @@
 			"value" : "FALSE"
 		},
 		{
-			"name" : "logger_BINARY_DIR",
+			"name" : "allocator_2_BINARY_DIR",
 			"properties" : 
 			[
 				{
@@ -1239,10 +1239,10 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/logger/cmake-build-debug"
+			"value" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_2/cmake-build-debug"
 		},
 		{
-			"name" : "logger_IS_TOP_LEVEL",
+			"name" : "allocator_2_IS_TOP_LEVEL",
 			"properties" : 
 			[
 				{
@@ -1254,7 +1254,7 @@
 			"value" : "ON"
 		},
 		{
-			"name" : "logger_SOURCE_DIR",
+			"name" : "allocator_2_SOURCE_DIR",
 			"properties" : 
 			[
 				{
@@ -1263,7 +1263,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/logger"
+			"value" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_2"
 		}
 	],
 	"kind" : "cache",
