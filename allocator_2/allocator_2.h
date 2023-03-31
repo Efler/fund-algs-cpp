@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <memory>
 #include "abstract_allocator.h"
 #include "..\logger\logger_builder.h"
 
