@@ -83,11 +83,19 @@ private:
         return p;
     }
 
+    abstract_allocator* memory_allocator() const {
+        void* p_memory = _memory;
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<mode*>(p_memory) + 1);
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<logger**>(p_memory) + 1);
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
+        return *reinterpret_cast<abstract_allocator**>(p_memory);
+    }
+
 public:
 
-    allocator_2(size_t size, mode alloc_mode, logger* alloc_logger, const abstract_allocator& alloc){
+    allocator_2(size_t size, mode alloc_mode, logger* alloc_logger, abstract_allocator* alloc){
         try{
-            _memory = alloc.allocate(size);
+            _memory = alloc->allocate(size);
         }catch(const logic_error& ex){
             throw logic_error("Bad Allocation!");
         }
@@ -102,10 +110,12 @@ public:
         *(reinterpret_cast<void**>(p_memory)) = nullptr;
         first = reinterpret_cast<void**>(p_memory);
         p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
+        *(reinterpret_cast<abstract_allocator**>(p_memory)) = alloc;
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<abstract_allocator**>(p_memory) + 1);
         *(reinterpret_cast<void**>(p_memory)) = nullptr;
         *first = p_memory;
         p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
-        *(reinterpret_cast<size_t*>(p_memory)) = size - (sizeof(mode) + sizeof(logger*) + sizeof(void*) + sizeof(void*) + sizeof(size_t));
+        *(reinterpret_cast<size_t*>(p_memory)) = size - (sizeof(mode) + sizeof(logger*) + sizeof(void*) + sizeof(abstract_allocator*) + sizeof(void*) + sizeof(size_t));
 
         if(memory_logger() != nullptr){
             string msg = "ALLOCATOR CREATED (MEMORY SIZE: ";
@@ -132,10 +142,12 @@ public:
         *(reinterpret_cast<void**>(p_memory)) = nullptr;
         first = reinterpret_cast<void**>(p_memory);
         p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
+        *(reinterpret_cast<abstract_allocator**>(p_memory)) = nullptr;
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<abstract_allocator**>(p_memory) + 1);
         *(reinterpret_cast<void**>(p_memory)) = nullptr;
         *first = p_memory;
         p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
-        *(reinterpret_cast<size_t*>(p_memory)) = size - (sizeof(mode) + sizeof(logger*) + sizeof(void*) + sizeof(void*) + sizeof(size_t));
+        *(reinterpret_cast<size_t*>(p_memory)) = size - (sizeof(mode) + sizeof(logger*) + sizeof(void*) + sizeof(abstract_allocator*) + sizeof(void*) + sizeof(size_t));
 
         if(memory_logger() != nullptr){
             string msg = "ALLOCATOR CREATED (MEMORY SIZE: ";
@@ -150,7 +162,11 @@ public:
             string msg = "ALLOCATOR DELETED\n";
             memory_logger()->log(msg, logger::severity::debug);
         }
-        ::operator delete(_memory);
+        if(memory_allocator() == nullptr){
+            ::operator delete(_memory);
+        }else{
+            memory_allocator()->deallocate(_memory);
+        }
     }
 
     allocator_2(const allocator_2& alloc) = delete;
