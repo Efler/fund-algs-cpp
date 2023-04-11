@@ -1,7 +1,3 @@
-#ifndef ALLOCATOR_3_ALLOCATOR_3_H
-#define ALLOCATOR_3_ALLOCATOR_3_H
-
-
 #include <iostream>
 #include <cmath>
 #include <memory>
@@ -27,7 +23,7 @@ private:
 
     string memory_dump(void* const p, const size_t t) const {
         auto* p2 = reinterpret_cast<unsigned char*>(p);
-        string s = "";
+        string s;
         int dump;
         for(int k = 0; k < t; ++k){
             dump = (int)(*p2);
@@ -42,6 +38,24 @@ private:
         char address_buf[(sizeof(void const * const) << 1) + 3];
         sprintf(address_buf, "%#p", pointer);
         return std::string { address_buf };
+    }
+
+    size_t memory_size() const {
+        void* p_memory = _memory;
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<mode*>(p_memory) + 1);
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<logger**>(p_memory) + 1);
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<abstract_allocator**>(p_memory) + 1);
+        return *reinterpret_cast<size_t*>(p_memory);
+    }
+
+    size_t* memory_size_pointer() const {
+        void* p_memory = _memory;
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<mode*>(p_memory) + 1);
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<logger**>(p_memory) + 1);
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<abstract_allocator**>(p_memory) + 1);
+        return reinterpret_cast<size_t*>(p_memory);
     }
 
     mode memory_mode() const {
@@ -73,73 +87,81 @@ private:
 
     size_t block_size(void** pointer) const {
         void** p = pointer;
-        return *reinterpret_cast<size_t*>(p + 1);
+        return *reinterpret_cast<size_t*>(p + 2);
     }
 
     size_t* block_size_pointer(void** pointer) const {
         void** p = pointer;
-        return reinterpret_cast<size_t*>(p + 1);
+        return reinterpret_cast<size_t*>(p + 2);
     }
 
     void* block_pool(void** pointer) const {
-        void* p = reinterpret_cast<void*>(pointer + 1);
+        void* p = reinterpret_cast<void*>(pointer + 2);
         p = reinterpret_cast<void*>(reinterpret_cast<size_t*>(p) + 1);
         return p;
     }
 
+    void** next(void** pointer) const {
+        return reinterpret_cast<void**>(*(pointer + 1));
+    }
+
+    void** next_pointer(void** pointer)const {
+        return pointer + 1;
+    }
+
+    abstract_allocator* memory_allocator() const {
+        void* p_memory = _memory;
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<mode*>(p_memory) + 1);
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<logger**>(p_memory) + 1);
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
+        return *reinterpret_cast<abstract_allocator**>(p_memory);
+    }
+
+    void** space_after_block(void** p) const {
+        return reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(reinterpret_cast<size_t*>(p + 2) + 1) + block_size(p));
+    }
+
+    size_t count_free_space(void** p) const {
+        if(*p == nullptr){
+            return (unsigned char*)p - (unsigned char*)(memory_size_pointer() + 1);
+        }else{
+            return (unsigned char*)p - (unsigned char*)(reinterpret_cast<unsigned char*>(block_pool(reinterpret_cast<void**>(*p))) + block_size(reinterpret_cast<void**>(*p)));
+        }
+    }
+
+    size_t count_end_space(void** p) const {
+        unsigned char* a = reinterpret_cast<unsigned char*>(reinterpret_cast<size_t*>(p + 2) + 1) + block_size(p);
+        unsigned char* b = reinterpret_cast<unsigned char*>(memory_size_pointer() + 1) + memory_size();
+        return b - a;
+    }
+
 public:
 
-    allocator_3(size_t size, mode alloc_mode, logger* alloc_logger, const abstract_allocator& alloc){
+    explicit allocator_3(size_t size, mode alloc_mode = mode::first, logger* alloc_logger = nullptr, abstract_allocator* alloc = nullptr){
         try{
-            _memory = alloc.allocate(size);
+            if(alloc != nullptr){
+                _memory = alloc->allocate(size + (sizeof(mode) + sizeof(logger*) + sizeof(void*) + sizeof(abstract_allocator*) + sizeof(size_t)));
+            }else{
+                _memory = ::operator new(size + (sizeof(mode) + sizeof(logger*) + sizeof(void*) + sizeof(abstract_allocator*) + sizeof(size_t)));
+            }
         }catch(const logic_error& ex){
             throw logic_error("Bad Allocation!");
         }
 
+        size_t* mem_size;
         void* p_memory = _memory;
-        void** first;
 
         *(reinterpret_cast<mode*>(p_memory)) = alloc_mode;
         p_memory = reinterpret_cast<void*>(reinterpret_cast<mode*>(p_memory) + 1);
         *(reinterpret_cast<logger**>(p_memory)) = alloc_logger;
         p_memory = reinterpret_cast<void*>(reinterpret_cast<logger**>(p_memory) + 1);
         *(reinterpret_cast<void**>(p_memory)) = nullptr;
-        first = reinterpret_cast<void**>(p_memory);
         p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
-        *(reinterpret_cast<void**>(p_memory)) = nullptr;
-        *first = p_memory;
-        p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
-        *(reinterpret_cast<size_t*>(p_memory)) = size - (sizeof(mode) + sizeof(logger*) + sizeof(void*) + sizeof(void*) + sizeof(size_t));
-
-        if(memory_logger() != nullptr){
-            string msg = "ALLOCATOR CREATED (MEMORY SIZE: ";
-            msg += to_string((int)size);
-            msg += " BYTES)\n";
-            memory_logger()->log(msg, logger::severity::debug);
-        }
-    }
-
-    allocator_3(size_t size, mode alloc_mode, logger* alloc_logger){
-        try{
-            _memory = ::operator new(size);
-        }catch(const bad_alloc &ba){
-            throw logic_error("Bad Allocation!");
-        }
-
-        void* p_memory = _memory;
-        void** first;
-
-        *(reinterpret_cast<mode*>(p_memory)) = alloc_mode;
-        p_memory = reinterpret_cast<void*>(reinterpret_cast<mode*>(p_memory) + 1);
-        *(reinterpret_cast<logger**>(p_memory)) = alloc_logger;
-        p_memory = reinterpret_cast<void*>(reinterpret_cast<logger**>(p_memory) + 1);
-        *(reinterpret_cast<void**>(p_memory)) = nullptr;
-        first = reinterpret_cast<void**>(p_memory);
-        p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
-        *(reinterpret_cast<void**>(p_memory)) = nullptr;
-        *first = p_memory;
-        p_memory = reinterpret_cast<void*>(reinterpret_cast<void**>(p_memory) + 1);
-        *(reinterpret_cast<size_t*>(p_memory)) = size - (sizeof(mode) + sizeof(logger*) + sizeof(void*) + sizeof(void*) + sizeof(size_t));
+        *(reinterpret_cast<abstract_allocator**>(p_memory)) = alloc;
+        p_memory = reinterpret_cast<void*>(reinterpret_cast<abstract_allocator**>(p_memory) + 1);
+        *reinterpret_cast<size_t*>(p_memory) = 0;
+        mem_size = reinterpret_cast<size_t*>(p_memory);
+        *mem_size = size;
 
         if(memory_logger() != nullptr){
             string msg = "ALLOCATOR CREATED (MEMORY SIZE: ";
@@ -154,7 +176,11 @@ public:
             string msg = "ALLOCATOR DELETED\n";
             memory_logger()->log(msg, logger::severity::debug);
         }
-        ::operator delete(_memory);
+        if(memory_allocator() == nullptr){
+            ::operator delete(_memory);
+        }else{
+            memory_allocator()->deallocate(_memory);
+        }
     }
 
     allocator_3(const allocator_3& alloc) = delete;
@@ -166,252 +192,165 @@ public:
     allocator_3& operator=(allocator_3&& alloc) = delete;
 
     void* allocate(size_t target_size) const override{
-
         int flag = 0;
+        int end_flag = 0;
         void** p = memory_first_block();
         void** p_best = nullptr;
-        void** p_pr = nullptr;
-        void** p_pr_best = nullptr;
-        void** p_next;
+        void** p_target;
 
-        while(*p != nullptr){
-            if(memory_mode() == mode::first){
-                if(block_size(p) >= (target_size + sizeof(void*) + sizeof(size_t))){
+        if(p == nullptr){
+            if(target_size + 2 * sizeof(void*) + sizeof(size_t) > memory_size()){
+                string message = "size: ";
+                message += to_string(target_size);
+                message += ", Bad Allocation!!\n";
+                throw logic_error(message);
+            }
+            p = reinterpret_cast<void**>(memory_size_pointer() + 1);
+            *memory_first_block_pointer() = reinterpret_cast<void**>(p);
+            *p = nullptr;
+            *next_pointer(p) = nullptr;
+            *block_size_pointer(p) = target_size;
+
+            if(memory_logger() != nullptr){
+                string msg = "Allocation complete, address: ";
+                msg += address_to_hex(block_pool(p));
+                msg += ", size: ";
+                msg += to_string(target_size);
+                msg += "\n";
+                memory_logger()->log(msg, logger::severity::debug);
+            }
+
+            return block_pool(p);
+
+        }else{
+
+            while(next(p) != nullptr){
+                if (count_free_space(p) >= (target_size + 2 * sizeof(void*) + sizeof(size_t))){
                     flag++;
-                    break;
+                    if(memory_mode() == mode::first){
+                        break;
+                    }else if(memory_mode() == mode::best){
+                        if(p_best == nullptr){
+                            p_best = p;
+                        }else{
+                            if((count_free_space(p) - (target_size + 2 * sizeof(void*) + sizeof(size_t))) < (count_free_space(p_best) - (target_size + 2 * sizeof(void*) + sizeof(size_t)))){
+                                p_best = p;
+                            }
+                        }
+                    }else if(memory_mode() == mode::worst){
+                        if(p_best == nullptr){
+                            p_best = p;
+                        }else{
+                            if((count_free_space(p) - (target_size + 2 * sizeof(void*) + sizeof(size_t))) > (count_free_space(p_best) - (target_size + 2 * sizeof(void*) + sizeof(size_t)))){
+                                p_best = p;
+                            }
+                        }
+                    }
+                }
+                p = next(p);
+            }
+
+            if(memory_mode() == mode::first && flag == 0){
+                if(count_free_space(p) >= (target_size + 2 * sizeof(void*) + sizeof(size_t))){
+                    flag++;
+                }else if(count_end_space(p) >= (target_size + 2 * sizeof(void*) + sizeof(size_t))){
+                    flag++;
+                    end_flag++;
                 }
             }else if(memory_mode() == mode::best){
-                if(block_size(p) >= (target_size + sizeof(void*) + sizeof(size_t))){
-                    flag++;
-                    if(p_best == nullptr){
+                if(p_best != nullptr){
+                    if((count_end_space(p) - (target_size + 2 * sizeof(void*) + sizeof(size_t))) < (count_free_space(p_best) - (target_size + 2 * sizeof(void*) + sizeof(size_t)))){
                         p_best = p;
-                        p_pr_best = p_pr;
-                    }else{
-                        if((block_size(p) - (target_size + sizeof(void*) + sizeof(size_t))) < (block_size(p_best) - (target_size + sizeof(void*) + sizeof(size_t)))){
-                            p_best = p;
-                            p_pr_best = p_pr;
-                        }
+                        end_flag++;
+                    }
+                }else{
+                    if(count_end_space(p) >= (target_size + 2 * sizeof(void*) + sizeof(size_t))){
+                        flag++;
+                        end_flag++;
+                        p_best = p;
                     }
                 }
             }else if(memory_mode() == mode::worst){
-                if(block_size(p) >= (target_size + sizeof(void*) + sizeof(size_t))){
-                    flag++;
-                    if(p_best == nullptr){
+                if(p_best != nullptr){
+                    if((count_end_space(p) - (target_size + 2 * sizeof(void*) + sizeof(size_t))) > (count_free_space(p_best) - (target_size + 2 * sizeof(void*) + sizeof(size_t)))){
                         p_best = p;
-                        p_pr_best = p_pr;
-                    }else{
-                        if((block_size(p) - (target_size + sizeof(void*) + sizeof(size_t))) > (block_size(p_best) - (target_size + sizeof(void*) + sizeof(size_t)))){
-                            p_best = p;
-                            p_pr_best = p_pr;
-                        }
+                        end_flag++;
+                    }
+                }else{
+                    if(count_end_space(p) >= (target_size + 2 * sizeof(void*) + sizeof(size_t))){
+                        flag++;
+                        end_flag++;
+                        p_best = p;
                     }
                 }
             }
-            p_pr = p;
-            p = reinterpret_cast<void**>(*p);
-        }
 
-        if(memory_mode() == mode::first){
-            if(block_size(p) >= (target_size + sizeof(void*) + sizeof(size_t))){
-                flag++;
+            if(flag == 0){
+                string msg;
+                msg += "size: ";
+                msg += to_string(target_size);
+                msg += ", Bad Allocation!!\n";
+                throw logic_error(msg);
             }
-        }else if(memory_mode() == mode::best){
-            if(block_size(p) >= (target_size + sizeof(void*) + sizeof(size_t))){
-                flag++;
-                if(p_best == nullptr){
-                    p_best = p;
-                    p_pr_best = p_pr;
-                }else{
-                    if((block_size(p) - (target_size + sizeof(void*) + sizeof(size_t))) < (block_size(p_best) - (target_size + sizeof(void*) + sizeof(size_t)))){
-                        p_best = p;
-                        p_pr_best = p_pr;
-                    }
-                }
-            }
-        }else if(memory_mode() == mode::worst){
-            if(block_size(p) >= (target_size + sizeof(void*) + sizeof(size_t))){
-                flag++;
-                if(p_best == nullptr){
-                    p_best = p;
-                    p_pr_best = p_pr;
-                }else{
-                    if((block_size(p) - (target_size + sizeof(void*) + sizeof(size_t))) > (block_size(p_best) - (target_size + sizeof(void*) + sizeof(size_t)))){
-                        p_best = p;
-                        p_pr_best = p_pr;
-                    }
-                }
-            }
-        }
 
-        if(flag == 0){
-            string msg;
-            msg += "size: ";
-            msg += to_string(target_size);
-            msg += ", Bad Allocation!!\n";
-            throw logic_error(msg);
-        }
+            if(p_best != nullptr) p = p_best;
 
-        if(p_best != nullptr){
-            p = p_best;
-            p_pr = p_pr_best;
-        }
-
-        if(block_size(p) == (target_size + sizeof(void*) + sizeof(size_t*))){
-            if(*p != nullptr){
-                p_next = reinterpret_cast<void**>(*p);
-                if(p_pr != nullptr){
-                    *p_pr = p_next;
-                }else{
-                    *memory_first_block_pointer() = p_next;
-                }
+            if(end_flag == 1){
+                p_target = space_after_block(p);
+                *p_target = reinterpret_cast<void**>(p);
+                *next_pointer(p_target) = nullptr;
+                *next_pointer(p) = reinterpret_cast<void**>(p_target);
+                *block_size_pointer(p_target) = target_size;
             }else{
-                if(p_pr != nullptr) *p_pr = nullptr;
-                else *memory_first_block_pointer() = nullptr;
-            }
-        }
-        else{
-            if(*p != nullptr){
-                p_next = reinterpret_cast<void**>((reinterpret_cast<char*>(block_pool(p))) + target_size);
-                *p_next = reinterpret_cast<void**>(*p);
-                size_t* size_next = block_size_pointer(p_next);
-                *size_next = block_size(p) - sizeof(void*) - sizeof(size_t) - target_size;
-                *(block_size_pointer(p)) = target_size;
-                if(p_pr != nullptr){
-                    *p_pr = p_next;
+                if(*p != nullptr){
+                    p_target = space_after_block(reinterpret_cast<void**>(*p));
+                    *p_target = reinterpret_cast<void**>(*p);
+                    *next_pointer(reinterpret_cast<void**>(*p)) = p_target;
+                    *next_pointer(p_target) = p;
+                    *p = reinterpret_cast<void**>(p_target);
+                    *block_size_pointer(p_target) = target_size;
                 }else{
-                    *memory_first_block_pointer() = reinterpret_cast<void**>(p_next);
+                    p_target = reinterpret_cast<void**>(memory_size_pointer() + 1);
+                    *p_target = nullptr;
+                    *memory_first_block_pointer() = p_target;
+                    *next_pointer(p_target) = p;
+                    *p = reinterpret_cast<void**>(p_target);
+                    *block_size_pointer(p_target) = target_size;
                 }
             }
-            else{
-                p_next = reinterpret_cast<void**>((reinterpret_cast<char*>(block_pool(p))) + target_size);
-                *p_next = nullptr;
-                size_t* size_next = block_size_pointer(p_next);
-                *size_next = block_size(p) - sizeof(void*) - sizeof(size_t) - target_size;
-                *(block_size_pointer(p)) = target_size;
-                if(p_pr != nullptr){
-                    *p_pr = reinterpret_cast<void**>(p_next);
-                }else{
-                    *memory_first_block_pointer() = reinterpret_cast<void**>(p_next);
-                }
+
+            if(memory_logger() != nullptr){
+                string msg = "Allocation complete, address: ";
+                msg += address_to_hex(block_pool(p_target));
+                msg += ", size: ";
+                msg += to_string(target_size);
+                msg += "\n";
+                memory_logger()->log(msg, logger::severity::debug);
             }
-        }
 
-        if(memory_logger() != nullptr){
-            string msg = "Allocation complete, address: ";
-            msg += address_to_hex(block_pool(p));
-            msg += ", size: ";
-            msg += to_string(target_size);
-            msg += "\n";
-            memory_logger()->log(msg, logger::severity::debug);
-        }
+            return block_pool(p_target);
 
-        return block_pool(p);
+        }
     }
 
     void deallocate(void* target_to_dealloc) const override {
         void** p = reinterpret_cast<void**>(reinterpret_cast<size_t*>(target_to_dealloc) - 1);
-        p = reinterpret_cast<void**>(p - 1);
-
+        p = reinterpret_cast<void**>(p - 2);
         size_t dump_size = block_size(p);
-        void** p_pr = nullptr;
-        void** p_next = memory_first_block();
 
-        if(memory_first_block() == nullptr){
-            *p = nullptr;
-            *memory_first_block_pointer() = reinterpret_cast<void**>(p);
-
-        }else{
-
-            while((long long)p_next < (long long)p && *p_next != nullptr){
-                p_pr = p_next;
-                p_next = reinterpret_cast<void**>(*p_next);
-            }
-
-            if((long long)p_next < (long long)p && *p_next == nullptr){
-                p_pr = p_next;
-                p_next = nullptr;
-            }
-
-            if(p_next == nullptr){
-                if( reinterpret_cast<void**>(reinterpret_cast<char*>((reinterpret_cast<size_t*>(p_pr + 1)) + 1) + block_size(p_pr)) == p){
-                    *block_size_pointer(p_pr) = *block_size_pointer(p_pr) + *block_size_pointer(p) + sizeof(void*) + sizeof(size_t);
-                }else{
-                    *p = nullptr;
-                    *p_pr = reinterpret_cast<void**>(p);
-                }
+        if(*p != nullptr){
+            if(next(p) != nullptr){
+                *next_pointer(reinterpret_cast<void**>(*p)) = next(p);
+                *next(p) = reinterpret_cast<void**>(*p);
             }else{
-
-                if(*p_next == nullptr){
-                    if(p_pr == nullptr){
-                        if(reinterpret_cast<void**>(reinterpret_cast<char*>(reinterpret_cast<size_t*>(p + 1) + 1) + block_size(p)) == p_next) {
-//                            cout << "1\n";
-                            *block_size_pointer(p) = *block_size_pointer(p) + *block_size_pointer(p_next) + sizeof(void*) + sizeof(size_t);
-                            *p = nullptr;
-                            *memory_first_block_pointer() = reinterpret_cast<void**>(p);
-                        }else{
-//                            cout << "2\n";
-                            *p = reinterpret_cast<void**>(p_next);
-                            *memory_first_block_pointer() = reinterpret_cast<void**>(p);
-                        }
-                    }else{
-                        if(( reinterpret_cast<void**>(reinterpret_cast<char*>((reinterpret_cast<size_t*>(p + 1)) + 1) + block_size(p)) ) == p_next){
-                            if( reinterpret_cast<void**>(reinterpret_cast<char*>((reinterpret_cast<size_t*>(p_pr + 1)) + 1) + block_size(p_pr)) == p){
-//                                cout << "3\n";
-                                *block_size_pointer(p_pr) = *block_size_pointer(p_pr) + *block_size_pointer(p) + *block_size_pointer(p_next) + 2 * (sizeof(void*) + sizeof(size_t));
-                                *p_pr = nullptr;
-                            }else{
-//                                cout << "4\n";
-                                *block_size_pointer(p) = *block_size_pointer(p) + *block_size_pointer(p_next) + sizeof(void*) + sizeof(size_t);
-                                *p_pr = reinterpret_cast<void**>(p);
-                                *p = nullptr;
-                            }
-                        }else{
-                            if( reinterpret_cast<void**>(reinterpret_cast<char*>((reinterpret_cast<size_t*>(p_pr + 1)) + 1) + block_size(p_pr)) == p){
-//                                cout << "5\n";
-                                *block_size_pointer(p_pr) = *block_size_pointer(p_pr) + *block_size_pointer(p) + sizeof(void*) + sizeof(size_t);
-                            }else{
-//                                cout << "6\n";
-                                *p_pr = reinterpret_cast<void**>(p);
-                                *p = reinterpret_cast<void**>(p_next);
-                            }
-                        }
-                    }
-                }else{
-                    if(p_pr == nullptr){
-                        if(( reinterpret_cast<void**>(reinterpret_cast<char*>((reinterpret_cast<size_t*>(p + 1)) + 1) + block_size(p)) ) == p_next){
-//                            cout << "7\n";
-                            *block_size_pointer(p) = *block_size_pointer(p) + *block_size_pointer(p_next) + sizeof(void*) + sizeof(size_t);
-                            *p = reinterpret_cast<void**>(*p_next);
-                            *memory_first_block_pointer() = reinterpret_cast<void**>(p);
-                        }else{
-//                            cout << "8\n";
-                            *memory_first_block_pointer() = reinterpret_cast<void**>(p);
-                            *p = reinterpret_cast<void**>(p_next);
-                        }
-                    }else{
-                        if(( reinterpret_cast<void**>(reinterpret_cast<char*>((reinterpret_cast<size_t*>(p + 1)) + 1) + block_size(p)) ) == p_next){
-                            if( reinterpret_cast<void**>(reinterpret_cast<char*>((reinterpret_cast<size_t*>(p_pr + 1)) + 1) + block_size(p_pr)) == p){
-//                                cout << "9\n";
-                                *p_pr = reinterpret_cast<void**>(*p_next);
-                                *block_size_pointer(p_pr) = *block_size_pointer(p_pr) + *block_size_pointer(p) + *block_size_pointer(p_next) + 2 * (sizeof(void*) + sizeof(size_t));
-                            }else{
-//                                cout << "10\n";
-                                *block_size_pointer(p) = *block_size_pointer(p) + *block_size_pointer(p_next) + sizeof(void*) + sizeof(size_t);
-                                *p_pr = reinterpret_cast<void**>(p);
-                                *p = reinterpret_cast<void**>(*p_next);
-                            }
-                        }else{
-                            if( reinterpret_cast<void**>(reinterpret_cast<char*>((reinterpret_cast<size_t*>(p_pr + 1)) + 1) + block_size(p_pr)) == p){
-//                                cout << "11\n";
-                                *block_size_pointer(p_pr) = *block_size_pointer(p_pr) + *block_size_pointer(p) + sizeof(void*) + sizeof(size_t);
-                            }else{
-//                                cout << "12\n";
-                                *p_pr = reinterpret_cast<void**>(p);
-                                *p = reinterpret_cast<void**>(p_next);
-                            }
-                        }
-                    }
-                }
+                *next_pointer(reinterpret_cast<void**>(*p)) = next(p);
+            }
+        }else{
+            if(next(p) != nullptr){
+                *next(p) = *p;
+                *memory_first_block_pointer() = next(p);
+            }else{
+                *memory_first_block_pointer() = nullptr;
             }
         }
 
@@ -428,6 +367,3 @@ public:
     }
 
 };
-
-
-#endif //ALLOCATOR_3_ALLOCATOR_3_H
