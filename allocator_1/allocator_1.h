@@ -1,32 +1,47 @@
 #include <iostream>
-#include <vector>
-#include <set>
-#include <algorithm>
-#include <string>
 #include "../logger/logger_builder.h"
+#include "../allocator_2/abstract_allocator.h"
 using namespace std;
 
-class memory
+
+class allocator_1 final : public abstract_allocator
 {
 
 private:
 
-    map<void*, size_t> _pointers;
     const logger* _logger;
 
 public:
 
-    explicit memory(logger* l):
-        _logger(l)
-    {};
+    explicit allocator_1(const logger* l = nullptr):
+        _logger(l){
+        if(_logger != nullptr) _logger->log("ALLOCATOR CREATED", logger::severity::debug);
+    };
 
-    memory(memory const &) = delete;
+    allocator_1(const allocator_1& alloc) = delete;
 
-    memory &operator=(memory const &) = delete;
+    allocator_1(allocator_1&& alloc) = delete;
 
-    string memory_dump(void* const p, const size_t t){
+    allocator_1& operator=(const allocator_1& alloc) = delete;
+
+    allocator_1& operator=(allocator_1&& alloc) = delete;
+
+    ~allocator_1() override {
+        if(_logger != nullptr) _logger->log("ALLOCATOR DELETED", logger::severity::debug);
+    }
+
+private:
+
+    template <typename T>
+    string to_str(const T i) const {
+        stringstream stream;
+        stream << i;
+        return stream.str();
+    }
+
+    string memory_dump(void* const p, const size_t t) const {
         auto* p2 = reinterpret_cast<unsigned char*>(p);
-        string s = "";
+        string s;
         size_t dump;
         for(int k = 0; k < t; ++k){
             dump = (size_t)(*p2);
@@ -37,57 +52,48 @@ public:
         return s;
     }
 
-    string address_to_hex(void const * const pointer) noexcept{
+    string address_to_hex(void const * const pointer) const noexcept {
         char address_buf[(sizeof(void const * const) << 1) + 3];
         sprintf(address_buf, "%#p", pointer);
         return std::string { address_buf };
     }
 
-    virtual ~memory(){
-        /////debug
-//        for(void* i : _pointers){
-//            cout << i << ' ';
-//        }
-        /////debug
-        for(pair<void*, size_t> pointer : _pointers){
-            string msg = "Emergency deallocation of memory, address: ";
-            msg += address_to_hex(pointer.first);
-            msg += ", dump: ";
-            msg += memory_dump(pointer.first, pointer.second);
-            _logger->log(msg, logger::severity::debug);
-            ::operator delete(pointer.first);
-            _pointers.erase(pointer.first);
-        }
-    }
+public:
 
-    void* allocate(size_t target_size){
+    void* allocate(size_t target_size) const override {
         void* p;
         try{
-            p = ::operator new(target_size);
+            p = ::operator new(target_size + sizeof(size_t));
         }catch(const bad_alloc &ba){
-            p = nullptr;
-            _logger->log("Allocation failed, pointer with nullptr value", logger::severity::debug);
+            throw logic_error("Bad Allocation!");
         }
-        _pointers[p] = target_size;
-        string msg = "Allocation complete, address: ";
-        msg += address_to_hex(p);
-        _logger->log(msg, logger::severity::debug);
+        *reinterpret_cast<size_t*>(p) = target_size;
+        p = reinterpret_cast<void*>(reinterpret_cast<size_t*>(p) + 1);
+
+        if(_logger != nullptr){
+            string msg = "Allocation complete, address: ";
+            msg += address_to_hex(p);
+            msg += ", size: ";
+            msg += to_str(target_size);
+            _logger->log(msg, logger::severity::debug);
+        }
+
         return p;
     }
 
-    void deallocate(void* target_to_dealloc){
-        auto iter = _pointers.find(target_to_dealloc);
-        if(iter == _pointers.end()){
-            _logger->log("Could not deallocate memory, unexpected pointer", logger::severity::debug);
-            throw logic_error("Could not deallocate memory, unexpected pointer");
+    void deallocate(void* target_to_dealloc) const override {
+        size_t dump_size = *(reinterpret_cast<size_t*>(target_to_dealloc) - 1);
+        ::operator delete(reinterpret_cast<void*>(reinterpret_cast<size_t*>(target_to_dealloc) - 1));
+
+        if(_logger != nullptr){
+            string msg = "Deallocation complete, address: ";
+            msg += address_to_hex(target_to_dealloc);
+            msg += ", size: ";
+            msg += to_str(dump_size);
+            msg += ", dump: ";
+            msg += memory_dump(target_to_dealloc, dump_size);
+            _logger->log(msg, logger::severity::debug);
         }
-        string msg = "Deallocation complete, address: ";
-        msg += address_to_hex(target_to_dealloc);
-        msg += ", dump: ";
-        msg += memory_dump(target_to_dealloc, _pointers[target_to_dealloc]);
-        _logger->log(msg, logger::severity::debug);
-        ::operator delete(target_to_dealloc);
-        _pointers.erase(iter->first);
     }
 
 };

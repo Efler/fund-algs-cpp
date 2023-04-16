@@ -79,7 +79,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "23"
+			"value" : "25"
 		},
 		{
 			"name" : "CMAKE_CACHE_PATCH_VERSION",
@@ -130,6 +130,18 @@
 			"value" : ""
 		},
 		{
+			"name" : "CMAKE_COLOR_DIAGNOSTICS",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable colored diagnostics throughout."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
 			"name" : "CMAKE_COLOR_MAKEFILE",
 			"properties" : 
 			[
@@ -155,7 +167,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/bin/cmake.exe"
+			"value" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/x64/bin/cmake.exe"
 		},
 		{
 			"name" : "CMAKE_CPACK_COMMAND",
@@ -167,7 +179,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/bin/cpack.exe"
+			"value" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/x64/bin/cpack.exe"
 		},
 		{
 			"name" : "CMAKE_CTEST_COMMAND",
@@ -179,7 +191,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/bin/ctest.exe"
+			"value" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/x64/bin/ctest.exe"
 		},
 		{
 			"name" : "CMAKE_CXX_COMPILER",
@@ -194,7 +206,7 @@
 					"value" : "CXX compiler"
 				}
 			],
-			"type" : "FILEPATH",
+			"type" : "STRING",
 			"value" : "D:/JetBrains/CLion 2022.2.3/bin/mingw/bin/g++.exe"
 		},
 		{
@@ -338,7 +350,7 @@
 					"value" : "C compiler"
 				}
 			],
-			"type" : "FILEPATH",
+			"type" : "STRING",
 			"value" : "D:/JetBrains/CLion 2022.2.3/bin/mingw/bin/gcc.exe"
 		},
 		{
@@ -636,6 +648,18 @@
 			],
 			"type" : "INTERNAL",
 			"value" : "D:/JetBrains/CLion 2022.2.3/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include;D:/JetBrains/CLion 2022.2.3/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/../../../../include;D:/JetBrains/CLion 2022.2.3/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include-fixed;D:/JetBrains/CLion 2022.2.3/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/../../../../x86_64-w64-mingw32/include"
+		},
+		{
+			"name" : "CMAKE_FIND_PACKAGE_REDIRECTS_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake."
+				}
+			],
+			"type" : "STATIC",
+			"value" : "D:/JetBrains/CLion 2022.2.3/CLionProjects/fund_algs_2/allocator_1/cmake-build-debug/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -1091,7 +1115,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/share/cmake-3.23"
+			"value" : "D:/JetBrains/CLion 2022.2.3/bin/cmake/win/x64/share/cmake-3.25"
 		},
 		{
 			"name" : "CMAKE_SHARED_LINKER_FLAGS",
@@ -1316,6 +1340,18 @@
 			],
 			"type" : "BOOL",
 			"value" : "FALSE"
+		},
+		{
+			"name" : "_CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "linker supports push/pop state"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "TRUE"
 		},
 		{
 			"name" : "allocator_1_BINARY_DIR",
