@@ -9,7 +9,7 @@
 using namespace std;
 
 
-class logger
+class logger final
 {
     friend class logger_builder;
     friend class logger_config;
@@ -76,15 +76,6 @@ public:
                 }
             }
         }
-        //////////////////////debug
-//        for(pair<string, pair<ofstream*, severity>> k : _logger_streams){
-//            cout << k.first << " " << str_severity.at(k.second.second) << endl;
-//        }
-//        cout << "--------\n";
-//        for(pair<string, pair<ofstream*, size_t>> l : _streams){
-//            cout << l.first << " " << l.second.second << endl;
-//        }
-        //////////////////////debug
     }
 
     explicit logger(const string& config){
@@ -116,11 +107,15 @@ public:
         }
     }
 
-    logger(logger const &) = delete;
+    logger(logger const & other) = delete;
 
-    logger &operator=(logger const &) = delete;
+    logger(logger && other) = delete;
 
-    virtual ~logger(){
+    logger& operator=(logger const & other) = delete;
+
+    logger& operator=(logger && other) = delete;
+
+    ~logger(){
         for(pair <string, pair<ofstream*, severity>> st : _logger_streams){
             if(_streams[st.first].second > 1){
                 _streams[st.first].second--;
@@ -132,12 +127,6 @@ public:
                 _streams.erase(st.first);
             }
         }
-        /////////////////////debug
-//        cout << "--------\n";
-//        for(pair<string, pair<ofstream*, size_t>> l : _streams){
-//            cout << l.first << " " << l.second.second << endl;
-//        }
-        /////////////////////debug
     }
 
     static string current_datetime_to_string()

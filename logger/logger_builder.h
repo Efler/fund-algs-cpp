@@ -1,6 +1,6 @@
 #include "logger_config.h"
 
-class logger_builder
+class logger_builder final
 {
 
 private:
