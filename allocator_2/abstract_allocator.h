@@ -1,3 +1,6 @@
+#ifndef ALLOCATOR_2_ABSTRACT_ALLOCATOR_H
+#define ALLOCATOR_2_ABSTRACT_ALLOCATOR_H
+
 #include <iostream>
 using namespace std;
 
@@ -14,3 +17,6 @@ public:
     virtual ~abstract_allocator() = default;
 
 };
+
+
+#endif //ALLOCATOR_2_ABSTRACT_ALLOCATOR_H
