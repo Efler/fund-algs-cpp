@@ -1,3 +1,5 @@
+#ifndef LOGGER_LOGGER_H
+#define LOGGER_LOGGER_H
 #include <iostream>
 #include <map>
 #include <string>
@@ -159,3 +161,6 @@ public:
 };
 
 map<string, pair<ofstream*, size_t>> logger::_streams = map<string, pair<ofstream*, size_t>>();
+
+
+#endif //LOGGER_LOGGER_H

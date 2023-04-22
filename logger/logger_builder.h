@@ -1,3 +1,5 @@
+#ifndef LOGGER_LOGGER_BUILDER_H
+#define LOGGER_LOGGER_BUILDER_H
 #include "logger_config.h"
 
 class logger_builder final
@@ -21,3 +23,6 @@ public:
     }
 
 };
+
+
+#endif //LOGGER_LOGGER_BUILDER_H
