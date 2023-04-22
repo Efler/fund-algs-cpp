@@ -17,7 +17,7 @@ public:
 
     virtual void insert(const tkey &key, const tvalue &value) = 0;
 
-    virtual tvalue* remove(const tkey &key) = 0;
+    virtual tvalue&& remove(const tkey &key) = 0;
 
     bool operator[](key_value_pair* target_key_and_result_value){
         return find(target_key_and_result_value);
@@ -27,11 +27,13 @@ public:
         insert(pair._key, pair._value);
     }
 
-    tvalue* operator-=(const tkey &key){
+    tvalue&& operator-=(const tkey &key){
         return remove(key);
     }
 
-    virtual ~associative_container() = 0;
+    virtual void bypass() const = 0;
+
+    virtual ~associative_container() = default;
 
 };
 
