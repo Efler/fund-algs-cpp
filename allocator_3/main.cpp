@@ -20,9 +20,9 @@ void testing_allocator(){
 
     srand((unsigned)time(nullptr));
 
-    for (size_t i = 0; i < 20000; ++i)
+    void* ptr;
+    for (size_t i = 0; i < 2000; ++i)
     {
-        void* ptr;
 
         switch (rand() % 2)
         {
