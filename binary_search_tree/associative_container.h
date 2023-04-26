@@ -2,7 +2,7 @@
 #define BINARY_SEARCH_TREE_ASSOCIATIVE_CONTAINER_H
 
 
-template <typename tkey, typename tvalue, typename tkey_comparer>
+template <typename tkey, typename tvalue>
 class associative_container
 {
 
@@ -11,6 +11,12 @@ public:
     struct key_value_pair{
         tkey _key;
         tvalue _value;
+    };
+
+    enum class bypass_mode{
+        prefix,
+        infix,
+        postfix
     };
 
     virtual bool find(key_value_pair* target_key_and_result_value) = 0;
@@ -31,7 +37,9 @@ public:
         return remove(key);
     }
 
-    virtual void bypass() const = 0;
+    virtual void bypass(bypass_mode mode) const = 0;
+
+    virtual const tvalue& get(const tkey &key) const = 0;
 
     virtual ~associative_container() = default;
 
