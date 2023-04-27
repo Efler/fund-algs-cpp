@@ -3,6 +3,7 @@
 #include "associative_container.h"
 #include "../allocator_2/abstract_allocator.h"
 #include "../logger/logger_builder.h"
+#include "make_string.h"
 #include <stack>
 
 
@@ -89,11 +90,12 @@ public:
                 _current_node = _current_node->right;
                 return *this;
             }else if(_current_node->left == nullptr && _current_node->right == nullptr){
-                while(!_path.empty() && _path.top()->right == _current_node){
+                while(!_path.empty() && _path.top()->left == _current_node){
                     _current_node = _path.top();
                     _path.pop();
                 }
-                _current_node = _path.top()->right;
+                if(_path.empty()) _current_node = _tree_root->right;
+                else _current_node = _path.top()->right;
                 return *this;
             }
         }
@@ -114,7 +116,6 @@ public:
         return pref_iterator(_root, nullptr);
     }
 
-    ///-----------------------------------------------------
 
     class inf_iterator final
     {
@@ -177,7 +178,7 @@ public:
                     _path.push(_current_node);
                     _current_node = _current_node->left;
                 }
-            }else{ ///////----------------------------мб приколы
+            }else{
                 if (_path.top()->left == _current_node){
                     _current_node = _path.top();
                     _path.pop();
@@ -211,7 +212,6 @@ public:
         return inf_iterator(_root, nullptr);
     }
 
-    ///-----------------------------------------------------
 
     class postf_iterator final
     {
@@ -308,7 +308,6 @@ public:
         return postf_iterator(_root, nullptr);
     }
 
-    ///-----------------------------------------------------
 
     bool find(typename associative_container<tkey, tvalue>::key_value_pair* target_key_and_result_value) override {
         bool result;
@@ -409,17 +408,17 @@ protected:
     };
 
 public:
-                                                    ////TODO: придумать как мувнуть наверх value!!!!!
-    tvalue&& remove(const tkey &key) override {
+
+    tvalue remove(const tkey &key) override {
         if(_root == nullptr){
             if(_logger != nullptr) _logger->log("Tree is empty!", logger::severity::debug);
             throw logic_error("Tree is empty!");
         }
         node** p_root;
         p_root = &_root;
-        tvalue&& result = std::move(_remove->remove_concrete(key, p_root, this->_allocator, this->_logger));
+        tvalue result = _remove->remove_concrete(key, p_root, this->_allocator, this->_logger);
         _remove->after_remove(key, p_root, this->_logger);
-        return std::move(result);
+        return result;
     }
 
 protected:
@@ -432,7 +431,7 @@ protected:
 
     public:
 
-        tvalue&& remove_concrete(const tkey &key, node** root, abstract_allocator* alloc, logger* logger){
+        tvalue remove_concrete(const tkey &key, node** root, abstract_allocator* alloc, logger* logger){
             node* current = *root;
             size_t turn;
             tkey_comparer comparer = tkey_comparer();
@@ -453,48 +452,48 @@ protected:
                 }else{
                     _remove_path.top()->right = nullptr;
                 }
-                tvalue&& result = std::move(current->value);
+                tvalue result = std::move(current->value);
                 current->~node();
                 alloc->deallocate(reinterpret_cast<void*>(current));
                 if(logger != nullptr) logger->log("Tree node deleted", logger::severity::debug);
-                return std::move(result);
+                return result;
             }else if((current->right != nullptr && current->left == nullptr) || (current->right == nullptr && current->left != nullptr)){
                 if(current->right == nullptr && current->left != nullptr){
                     _remove_path.top()->left = current->left;
                 }else{
                     _remove_path.top()->right = current->right;
                 }
-                tvalue&& result = std::move(current->value);
+                tvalue result = std::move(current->value);
                 current->~node();
                 alloc->deallocate(reinterpret_cast<void*>(current));
                 if(logger != nullptr) logger->log("Tree node deleted", logger::severity::debug);
-                return std::move(result);
+                return result;
             }else if(current->right != nullptr && current->left != nullptr){
                 node* next_node = current;
                 _remove_path.push(current);
                 next_node = next_node->right;
                 if(next_node->left == nullptr){
+                    tvalue result = std::move(current->value);
                     current->key = next_node->key;
                     current->value = next_node->value;
                     current->right = next_node->right;
-                    tvalue&& result = std::move(next_node->value);
                     current->~node();
                     alloc->deallocate(reinterpret_cast<void*>(next_node));
                     if(logger != nullptr) logger->log("Tree node deleted", logger::severity::debug);
-                    return std::move(result);
+                    return result;
                 }else{
                     while(next_node->left != nullptr){
                         _remove_path.push(next_node);
                         next_node = next_node->left;
                     }
+                    tvalue result = std::move(current->value);
                     current->key = next_node->key;
                     current->value = next_node->value;
                     _remove_path.top()->left = next_node->right;
-                    tvalue&& result = std::move(next_node->value);
                     current->~node();
                     alloc->deallocate(reinterpret_cast<void*>(next_node));
                     if(logger != nullptr) logger->log("Tree node deleted", logger::severity::debug);
-                    return std::move(result);
+                    return result;
                 }
             }
         }
@@ -509,6 +508,22 @@ protected:
         virtual ~remove_template_method() = default;
 
     };
+
+protected:
+
+    void rotate_left(node** subtree_root) const {
+        node* tmp = (*subtree_root)->right;
+        (*subtree_root)->right = tmp->left;
+        tmp->left = (*subtree_root);
+        (*subtree_root) = tmp;
+    }
+
+    void rotate_right(node** subtree_root) const {
+        node* tmp = (*subtree_root)->left;
+        (*subtree_root)->left = tmp->right;
+        tmp->right = (*subtree_root);
+        (*subtree_root) = tmp;
+    }
 
 public:
 
@@ -532,22 +547,28 @@ public:
         switch(mode){
             case associative_container<tkey,tvalue>::bypass_mode::prefix:
                 for (auto begin = begin_pref(); begin != end_pref(); ++begin){
-                    msg += to_string(std::get<0>(*begin));
-                    msg += " ";
+                    msg += make_string(std::get<0>(*begin));
+                    msg += " : ";
+                    msg += make_string(std::get<1>(*begin));
+                    msg += "   ";
                 }
                 _logger->log(msg, logger::severity::debug);
                 break;
             case associative_container<tkey,tvalue>::bypass_mode::infix:
                 for (auto begin = begin_inf(); begin != end_inf(); ++begin){
-                    msg += to_string(std::get<0>(*begin));
-                    msg += " ";
+                    msg += make_string(std::get<0>(*begin));
+                    msg += " : ";
+                    msg += make_string(std::get<1>(*begin));
+                    msg += "   ";
                 }
                 _logger->log(msg, logger::severity::debug);
                 break;
             case associative_container<tkey,tvalue>::bypass_mode::postfix:
                 for (auto begin = begin_postf(); begin != end_postf(); ++begin){
-                    msg += to_string(std::get<0>(*begin));
-                    msg += " ";
+                    msg += make_string(std::get<0>(*begin));
+                    msg += " : ";
+                    msg += make_string(std::get<1>(*begin));
+                    msg += "   ";
                 }
                 _logger->log(msg, logger::severity::debug);
                 break;
@@ -574,21 +595,74 @@ public:
         _find = new find_template_method();
         _insert = new insert_template_method();
         _remove = new remove_template_method();
-        if(_logger != nullptr) _logger->log("Binary_search_tree CREATED", logger::severity::debug);
+        if(_logger != nullptr) _logger->log("Binary_search_tree CREATED!", logger::severity::debug);
     }
 
-    binary_search_tree(const binary_search_tree<tkey, tvalue, tkey_comparer>& tree) = delete;
+    binary_search_tree(const binary_search_tree<tkey, tvalue, tkey_comparer>& tree):
+            _root(nullptr), _allocator(tree._allocator), _logger(tree._logger)
+    {
+        _find = new find_template_method();
+        _insert = new insert_template_method();
+        _remove = new remove_template_method();
+        auto it = tree.begin_pref();
+        auto end = tree.end_pref();
+        for(; it != end; ++it){
+            this->insert(std::get<0>(*it), std::get<1>(*it));
+        }
+        if(_logger != nullptr) _logger->log("Binary_search_tree CREATED!", logger::severity::debug);
+    };
 
-    binary_search_tree(binary_search_tree<tkey, tvalue, tkey_comparer>&& tree) = delete;
+    binary_search_tree(binary_search_tree<tkey, tvalue, tkey_comparer>&& tree) noexcept :
+            _root(tree._root), _allocator(tree._allocator), _logger(tree._logger)
+    {
+        _find = new find_template_method();
+        _insert = new insert_template_method();
+        _remove = new remove_template_method();
+        tree._root = nullptr;
+    };
 
-    binary_search_tree<tkey, tvalue, tkey_comparer>& operator=(const binary_search_tree<tkey, tvalue, tkey_comparer>& tree) = delete;
+    binary_search_tree<tkey, tvalue, tkey_comparer>& operator=(const binary_search_tree<tkey, tvalue, tkey_comparer>& tree){
+        if(this != &tree){
+            postf_iterator begin = begin_postf();
+            postf_iterator end = end_postf();
+            for(; begin != end; ++begin){
+                std::get<3>(*begin)->~node();
+                _allocator->deallocate(reinterpret_cast<void*>(std::get<3>(*begin)));
+                if(_logger != nullptr) _logger->log("OPERATOR=: Tree node deleted!", logger::severity::debug);
+            }
+            auto it = tree.begin_pref();
+            auto t_end = tree.end_pref();
+            for(; it != t_end; ++it){
+                this->insert(std::get<0>(*it), std::get<1>(*it));
+            }
+            if(_logger != nullptr) _logger->log("Binary_search_tree COPIED!", logger::severity::debug);
+        }
 
-                                                //TODO: зассал делать
+        return *this;
+    }
+
+    binary_search_tree<tkey, tvalue, tkey_comparer>& operator=(binary_search_tree<tkey, tvalue, tkey_comparer>&& tree) noexcept {
+        if(&tree != this){
+            postf_iterator begin = begin_postf();
+            postf_iterator end = end_postf();
+            for(; begin != end; ++begin){
+                std::get<3>(*begin)->~node();
+                _allocator->deallocate(reinterpret_cast<void*>(std::get<3>(*begin)));
+                if(_logger != nullptr) _logger->log("OPERATOR=: Tree node deleted!", logger::severity::debug);
+            }
+            this->_allocator = tree._allocator;
+            this->_root = tree._root;
+            tree._root = nullptr;
+            if(_logger != nullptr) _logger->log("Binary_search_tree MOVED!", logger::severity::debug);
+        }
+
+        return *this;
+    }
 
     ~binary_search_tree(){
         postf_iterator begin = begin_postf();
         postf_iterator end = end_postf();
-        for(begin; begin != end; ++begin){
+        for(; begin != end; ++begin){
             std::get<3>(*begin)->~node();
             _allocator->deallocate(reinterpret_cast<void*>(std::get<3>(*begin)));
             if(_logger != nullptr) _logger->log("DESTRUCTOR: Tree node deleted!", logger::severity::debug);
@@ -600,6 +674,7 @@ public:
         if(_logger != nullptr) _logger->log("DESTRUCTOR: insert_template_method deleted!", logger::severity::debug);
         delete _remove;
         if(_logger != nullptr) _logger->log("DESTRUCTOR: remove_template_method deleted!", logger::severity::debug);
+        if(_logger != nullptr) _logger->log("DESTRUCTOR: Binary_search_tree DELETED!", logger::severity::debug);
     }
 
 };
