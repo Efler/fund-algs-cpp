@@ -1,6 +1,7 @@
 #include <iostream>
+#include <ctime>
 #include "binary_search_tree.h"
-#include "../allocator_1/allocator_1.h"
+#include "../allocator_3/allocator_3.h"
 
 
 class my_int_comparer
@@ -18,72 +19,121 @@ int main(){
     auto* builder = new logger_builder();
 
     logger* logger1 = builder->add_stream("console", logger::severity::debug)
-                            ->build();
-    abstract_allocator* allocator = new allocator_1(logger1);
-//    associative_container<int, string>* bst = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
-    auto* bst = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
+                             ->build();
+    abstract_allocator* allocator = new allocator_3(500000, allocator_3::mode::best);
+    associative_container<int, string>* bst = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
+//    auto* bst = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
 
-////constructors test
+//-----------------------------------------
 
-    auto k = associative_container<int, std::string>::key_value_pair{0, std::move(std::string("1234"))};
-    *bst += k;
-    k = associative_container<int, std::string>::key_value_pair{-1, std::move(std::string("2345"))};
-    *bst += k;
-    k = associative_container<int, std::string>::key_value_pair{1, std::move(std::string("3456"))};
-    *bst += k;
-    k = associative_container<int, std::string>::key_value_pair{-2, std::move(std::string("4567"))};
-    *bst += k;
-    k = associative_container<int, std::string>::key_value_pair{2, std::move(std::string("5678"))};
-    *bst += k;
-    k = associative_container<int, std::string>::key_value_pair{-3, std::move(std::string("6789"))};
-    *bst += k;
-    k = associative_container<int, std::string>::key_value_pair{3, std::move(std::string("7890"))};
-    *bst += k;
+////strong test
 
-    bst->bypass(associative_container<int, string>::bypass_mode::infix);
-    cout << "---" <<endl;
+    srand(time(nullptr));
+    for(int i = 0; i < 1000; ++i){
+        int action = rand() % 2;
+        int bp_mode = rand() % 3;
 
-    auto* bst2 = new binary_search_tree<int, string, my_int_comparer>(*bst);
+        int random_key = rand() % 21;
+        string value_str = "str";
 
-    bst->bypass(associative_container<int, string>::bypass_mode::infix);
-    bst2->bypass(associative_container<int, string>::bypass_mode::infix);
-    cout << "---" <<endl;
+        switch(action){
+            case 0:
+                try{
+                    logger1->log("inserting " + std::to_string(random_key), logger::severity::debug);
+                    bst->insert(random_key,value_str);
+                }catch(const logic_error& ex){
+                    logger1->log("Insertion of " + std::to_string(random_key) + " failed, exception message: \"" + ex.what() + "\"", logger::severity::debug);
+                }
+                break;
+            case 1:
+                try{
+                    logger1->log("removing " + std::to_string(random_key), logger::severity::debug);
+                    bst->remove(random_key);
+                }catch(const logic_error& ex){
+                    logger1->log("Removing of " + std::to_string(random_key) + " failed, exception message: \"" + ex.what() + "\"", logger::severity::debug);
+                }
+                break;
+        }
 
-    auto* bst3 = new binary_search_tree<int, string, my_int_comparer>(std::move(*bst2));
+        switch(bp_mode){
+            case 0:
+                logger1->log("prefix iterator", logger::severity::debug);
+                bst->bypass(associative_container<int, string>::bypass_mode::prefix);
+                break;
+            case 1:
+                logger1->log("infix iterator", logger::severity::debug);
+                bst->bypass(associative_container<int, string>::bypass_mode::infix);
+                break;
+            case 2:
+                logger1->log("postfix iterator", logger::severity::debug);
+                bst->bypass(associative_container<int, string>::bypass_mode::postfix);
+                break;
+        }
+    }
 
-    bst->bypass(associative_container<int, string>::bypass_mode::infix);
-    bst2->bypass(associative_container<int, string>::bypass_mode::infix);
-    bst3->bypass(associative_container<int, string>::bypass_mode::infix);
-    cout << "---" <<endl;
+//-----------------------------------
 
-    auto* bst4 = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
-    (*bst4) = (*bst3);
-
-    bst->bypass(associative_container<int, string>::bypass_mode::infix);
-    bst2->bypass(associative_container<int, string>::bypass_mode::infix);
-    bst3->bypass(associative_container<int, string>::bypass_mode::infix);
-    bst4->bypass(associative_container<int, string>::bypass_mode::infix);
-    cout << "---" <<endl;
-
-    auto* bst5 = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
-    (*bst5) = std::move(*bst3);
-
-    bst->bypass(associative_container<int, string>::bypass_mode::infix);
-    bst2->bypass(associative_container<int, string>::bypass_mode::infix);
-    bst3->bypass(associative_container<int, string>::bypass_mode::infix);
-    bst4->bypass(associative_container<int, string>::bypass_mode::infix);
-    bst5->bypass(associative_container<int, string>::bypass_mode::infix);
-    cout << "---" <<endl;
-
-    delete bst5;
-    delete bst4;
-    delete bst3;
-    delete bst2;
+////////constructors test
+//
+//    auto k = associative_container<int, std::string>::key_value_pair{0, std::move(std::string("1234"))};
+//    *bst += k;
+//    k = associative_container<int, std::string>::key_value_pair{-1, std::move(std::string("2345"))};
+//    *bst += k;
+//    k = associative_container<int, std::string>::key_value_pair{1, std::move(std::string("3456"))};
+//    *bst += k;
+//    k = associative_container<int, std::string>::key_value_pair{-2, std::move(std::string("4567"))};
+//    *bst += k;
+//    k = associative_container<int, std::string>::key_value_pair{2, std::move(std::string("5678"))};
+//    *bst += k;
+//    k = associative_container<int, std::string>::key_value_pair{-3, std::move(std::string("6789"))};
+//    *bst += k;
+//    k = associative_container<int, std::string>::key_value_pair{3, std::move(std::string("7890"))};
+//    *bst += k;
+//
+//    bst->bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" <<endl;
+//
+//    auto* bst2 = new binary_search_tree<int, string, my_int_comparer>(*bst);
+//
+//    bst->bypass(associative_container<int, string>::bypass_mode::infix);
+//    bst2->bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" <<endl;
+//
+//    auto* bst3 = new binary_search_tree<int, string, my_int_comparer>(std::move(*bst2));
+//
+//    bst->bypass(associative_container<int, string>::bypass_mode::infix);
+//    bst2->bypass(associative_container<int, string>::bypass_mode::infix);
+//    bst3->bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" <<endl;
+//
+//    auto* bst4 = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
+//    (*bst4) = (*bst3);
+//
+//    bst->bypass(associative_container<int, string>::bypass_mode::infix);
+//    bst2->bypass(associative_container<int, string>::bypass_mode::infix);
+//    bst3->bypass(associative_container<int, string>::bypass_mode::infix);
+//    bst4->bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" <<endl;
+//
+//    auto* bst5 = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
+//    (*bst5) = std::move(*bst3);
+//
+//    bst->bypass(associative_container<int, string>::bypass_mode::infix);
+//    bst2->bypass(associative_container<int, string>::bypass_mode::infix);
+//    bst3->bypass(associative_container<int, string>::bypass_mode::infix);
+//    bst4->bypass(associative_container<int, string>::bypass_mode::infix);
+//    bst5->bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" <<endl;
+//
+//    delete bst5;
+//    delete bst4;
+//    delete bst3;
+//    delete bst2;
 
 //---------------------------------------------
 
 //////test #1
-
+//
 //    auto k = associative_container<int, std::string>::key_value_pair{0, std::move(std::string("1234"))};
 //    *bst += k;
 //    k = associative_container<int, std::string>::key_value_pair{-1, std::move(std::string("2345"))};

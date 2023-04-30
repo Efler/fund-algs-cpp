@@ -78,8 +78,13 @@ public:
         pref_iterator& operator++(){
             if(_current_node == nullptr) return *this;
             if(_current_node == _last_node){
-                _current_node = nullptr;
-                _path = stack<node*>();
+                if(_tree_root == _last_node && _tree_root->left != nullptr){
+                    _path.push(_current_node);
+                    _current_node = _current_node->left;
+                }else{
+                    _current_node = nullptr;
+                    _path = stack<node*>();
+                }
                 return *this;
             }else if(_current_node->left != nullptr){
                 _path.push(_current_node);
@@ -90,11 +95,17 @@ public:
                 _current_node = _current_node->right;
                 return *this;
             }else if(_current_node->left == nullptr && _current_node->right == nullptr){
-                while(!_path.empty() && _path.top()->left == _current_node){
+                while(!_path.empty() && ((_path.top()->left == _current_node && _path.top()->right == nullptr) || _path.top()->right == _current_node)){
                     _current_node = _path.top();
                     _path.pop();
                 }
-                if(_path.empty()) _current_node = _tree_root->right;
+                if(_path.empty()){
+                    if(_tree_root->right == nullptr){
+                        _current_node = nullptr;
+                        _path = stack<node*>();
+                        return *this;
+                    }else _current_node = _tree_root->right;
+                }
                 else _current_node = _path.top()->right;
                 return *this;
             }
@@ -295,10 +306,10 @@ public:
     postf_iterator begin_postf() const {
         node* start = _root;
         if(_root != nullptr){
-            if (_root->left != nullptr) while (start->left != nullptr) start = start->left;
-            else {
-                while (start->left == nullptr && start->right != nullptr) start = start->right;
-                while (start->left != nullptr) start = start->left;
+            if(_root->left == nullptr) while (start->left == nullptr && start->right != nullptr) start = start->right;
+            while(start->left != nullptr || start->right != nullptr){
+                if(start->left == nullptr) start = start->right;
+                else start = start->left;
             }
         }
         return postf_iterator(_root, start);
@@ -377,7 +388,11 @@ protected:
             }
             while(current != nullptr){
                 _insert_path.push(current);
-                if(comparer(key, current->key) > 0){
+                int comp_result = comparer(key, current->key);
+                if(comp_result == 0){
+                    throw logic_error("Duplicate key!");
+                }
+                else if(comp_result > 0){
                     turn = 1;
                     current = current->right;
                 }else{
@@ -411,7 +426,6 @@ public:
 
     tvalue remove(const tkey &key) override {
         if(_root == nullptr){
-            if(_logger != nullptr) _logger->log("Tree is empty!", logger::severity::debug);
             throw logic_error("Tree is empty!");
         }
         node** p_root;
@@ -433,9 +447,9 @@ protected:
 
         tvalue remove_concrete(const tkey &key, node** root, abstract_allocator* alloc, logger* logger){
             node* current = *root;
-            size_t turn;
+            size_t turn = 2;
             tkey_comparer comparer = tkey_comparer();
-            while(current->key != key){
+            while(current != nullptr && current->key != key){
                 _remove_path.push(current);
                 if(comparer(key, current->key) > 0){
                     current = current->right;
@@ -446,22 +460,29 @@ protected:
                     turn = 0;
                 }
             }
+            if (current == nullptr)
+            {
+                throw logic_error("Key not found!");
+            }
             if(current->right == nullptr && current->left == nullptr){
                 if(turn == 0){
                     _remove_path.top()->left = nullptr;
-                }else{
+                }else if(turn == 1){
                     _remove_path.top()->right = nullptr;
                 }
                 tvalue result = std::move(current->value);
                 current->~node();
                 alloc->deallocate(reinterpret_cast<void*>(current));
+                if(turn == 2) *root = nullptr;
                 if(logger != nullptr) logger->log("Tree node deleted", logger::severity::debug);
                 return result;
             }else if((current->right != nullptr && current->left == nullptr) || (current->right == nullptr && current->left != nullptr)){
                 if(current->right == nullptr && current->left != nullptr){
-                    _remove_path.top()->left = current->left;
+                    if(current == *root) *root = current->left;
+                    else turn == 0 ? _remove_path.top()->left = current->left : _remove_path.top()->right = current->left;
                 }else{
-                    _remove_path.top()->right = current->right;
+                    if(current == *root) *root = current->right;
+                    else turn == 0 ? _remove_path.top()->left = current->right : _remove_path.top()->right = current->right;
                 }
                 tvalue result = std::move(current->value);
                 current->~node();
@@ -539,7 +560,7 @@ public:
             else current = current->left;
             if(key == current->key) return current->value;
         }
-        throw logic_error("No key in the tree!");
+        throw logic_error("Key not found!");
     }
 
     void bypass(typename associative_container<tkey,tvalue>::bypass_mode mode) const override {
