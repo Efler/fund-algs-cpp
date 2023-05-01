@@ -9,4 +9,5 @@ add_executable(binary_search_tree
         associative_container.h
         binary_search_tree.h
         make_string.h
+        debug_tree_printing.h
         main.cpp)

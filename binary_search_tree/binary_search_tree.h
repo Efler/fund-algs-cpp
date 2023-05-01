@@ -4,6 +4,7 @@
 #include "../allocator_2/abstract_allocator.h"
 #include "../logger/logger_builder.h"
 #include "make_string.h"
+#include "debug_tree_printing.h"   ///TODO DEBUG!!!!!!!!!!!!!!!!!!!!
 #include <stack>
 
 
@@ -574,6 +575,7 @@ public:
                     msg += "   ";
                 }
                 _logger->log(msg, logger::severity::debug);
+                debug_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(_root));        ////TODO DEBUG!!!!!!!!!!!!!!
                 break;
             case associative_container<tkey,tvalue>::bypass_mode::infix:
                 for (auto begin = begin_inf(); begin != end_inf(); ++begin){
@@ -583,6 +585,7 @@ public:
                     msg += "   ";
                 }
                 _logger->log(msg, logger::severity::debug);
+                debug_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(_root));        ////TODO DEBUG!!!!!!!!!!!!!!
                 break;
             case associative_container<tkey,tvalue>::bypass_mode::postfix:
                 for (auto begin = begin_postf(); begin != end_postf(); ++begin){
@@ -592,6 +595,7 @@ public:
                     msg += "   ";
                 }
                 _logger->log(msg, logger::severity::debug);
+                debug_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(_root));        ////TODO DEBUG!!!!!!!!!!!!!!
                 break;
             default:
                 return;
