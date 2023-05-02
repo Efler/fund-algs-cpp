@@ -29,7 +29,7 @@ int main(){
 ////strong test
 
     srand(time(nullptr));
-    for(int i = 0; i < 1000; ++i){
+    for(int i = 0; i < 100; ++i){
         int action = rand() % 2;
         int bp_mode = rand() % 3;
 

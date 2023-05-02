@@ -323,8 +323,8 @@ public:
 
     bool find(typename associative_container<tkey, tvalue>::key_value_pair* target_key_and_result_value) override {
         bool result;
-        result = _find->find_concrete(target_key_and_result_value, this);
-        _find->after_find(target_key_and_result_value, this);
+        result = _find->find_concrete(target_key_and_result_value, _root);
+        _find->after_find(target_key_and_result_value, _root);
         return result;
     }
 
@@ -334,12 +334,12 @@ protected:
     {
     public:
 
-        bool find_concrete(typename associative_container<tkey, tvalue>::key_value_pair* target_key_and_result_value, binary_search_tree<tkey, tvalue, tkey_comparer>* bst_tree) const {
-            node* current = bst_tree->_root;
+        bool find_concrete(typename associative_container<tkey, tvalue>::key_value_pair* target_key_and_result_value, node* root) const {
+            node* current = root;
             if(current != nullptr){
                 if(target_key_and_result_value->_key == current->key && target_key_and_result_value->_value == current->value) return true;
                 tkey_comparer comparer = tkey_comparer();
-                while(current->left != nullptr || current->right != nullptr){
+                while((current->left != nullptr && comparer(target_key_and_result_value->_key, current->key) < 0) || (current->right != nullptr && comparer(target_key_and_result_value->_key, current->key) > 0)){
                     if(comparer(target_key_and_result_value->_key, current->key) > 0) current = current->right;
                     else current = current->left;
                     if(target_key_and_result_value->_key == current->key && target_key_and_result_value->_value == current->value) return true;
@@ -348,7 +348,7 @@ protected:
             return false;
         }
 
-        virtual void after_find(typename associative_container<tkey, tvalue>::key_value_pair* target_key_and_result_value, binary_search_tree<tkey, tvalue, tkey_comparer>* bst_tree){
+        virtual void after_find(typename associative_container<tkey, tvalue>::key_value_pair* target_key_and_result_value, node* root){
 
         }
 
