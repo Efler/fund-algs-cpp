@@ -125,7 +125,7 @@ public:
         }
     }
 
-    allocator_2(size_t size, mode alloc_mode, logger* alloc_logger){
+    allocator_2(size_t size, mode alloc_mode, logger* alloc_logger = nullptr){
         try{
             _memory = ::operator new(size + (sizeof(mode) + sizeof(logger*) + sizeof(void*) + sizeof(abstract_allocator*)));
         }catch(const bad_alloc &ba){
