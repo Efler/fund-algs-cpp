@@ -14,13 +14,12 @@ public:
     }
 };
 
-
 int main(){
     auto* builder = new logger_builder();
 
     logger* logger1 = builder->add_stream("console", logger::severity::debug)
-                             ->build();
-    abstract_allocator* allocator = new allocator_3(500000, allocator_3::mode::best);
+            ->build();
+    abstract_allocator* allocator = new allocator_3(50000, allocator_3::mode::best);
     associative_container<int, string>* bst = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
 //    auto* bst = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
 
@@ -29,13 +28,13 @@ int main(){
 ////strong test
 
     srand(time(nullptr));
-    for(int i = 0; i < 100; ++i){
-        int action = rand() % 2;
+    for(int i = 0; i < 200; ++i){
+        int action = rand() % 3;
         int bp_mode = rand() % 3;
 
         int random_key = rand() % 21;
         string value_str = "str";
-
+        string result;
         switch(action){
             case 0:
                 try{
@@ -53,6 +52,14 @@ int main(){
                     logger1->log("Removing of " + std::to_string(random_key) + " failed, exception message: \"" + ex.what() + "\"", logger::severity::debug);
                 }
                 break;
+            case 2:
+                try{
+                    logger1->log("searching " + std::to_string(random_key), logger::severity::debug);
+                    result = bst->get(random_key);
+                    cout << "Value by key " << random_key << " == " << result << endl;
+                }catch(const logic_error& ex){
+                    logger1->log("Searching of " + std::to_string(random_key) + " failed, exception message: \"" + ex.what() + "\"", logger::severity::debug);
+                }
         }
 
         switch(bp_mode){

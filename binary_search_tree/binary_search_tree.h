@@ -16,7 +16,7 @@ protected:
 
     struct node{
         node() = default;
-        node(tkey k, tvalue v, node* l, node* r):
+        node(tkey const &k, tvalue const &v, node* l, node* r):
             key(k), value(v), left(l), right(r){}
 
         tkey key;
@@ -321,6 +321,8 @@ public:
     }
 
 
+public:
+
     bool find(typename associative_container<tkey, tvalue>::key_value_pair* target_key_and_result_value) override {
         bool result;
         result = _find->find_concrete(target_key_and_result_value, _root);
@@ -336,21 +338,19 @@ protected:
 
         bool find_concrete(typename associative_container<tkey, tvalue>::key_value_pair* target_key_and_result_value, node* root) const {
             node* current = root;
+            tkey_comparer comparer = tkey_comparer();
             if(current != nullptr){
-                if(target_key_and_result_value->_key == current->key && target_key_and_result_value->_value == current->value) return true;
-                tkey_comparer comparer = tkey_comparer();
+                if(comparer(target_key_and_result_value->_key, current->key) == 0 && target_key_and_result_value->_value == current->value) return true;
                 while((current->left != nullptr && comparer(target_key_and_result_value->_key, current->key) < 0) || (current->right != nullptr && comparer(target_key_and_result_value->_key, current->key) > 0)){
                     if(comparer(target_key_and_result_value->_key, current->key) > 0) current = current->right;
                     else current = current->left;
-                    if(target_key_and_result_value->_key == current->key && target_key_and_result_value->_value == current->value) return true;
+                    if(comparer(target_key_and_result_value->_key, current->key) == 0 && target_key_and_result_value->_value == current->value) return true;
                 }
             }
             return false;
         }
 
-        virtual void after_find(typename associative_container<tkey, tvalue>::key_value_pair* target_key_and_result_value, node* root){
-
-        }
+        virtual void after_find(typename associative_container<tkey, tvalue>::key_value_pair* target_key_and_result_value, node* root){}
 
     public:
 
@@ -373,7 +373,17 @@ protected:
     {
     private:
 
-        stack<node*> _insert_path = stack<node*>();
+        stack<node*> _insert_path = stack<node*>();   ////TODO: LOCAL STACK
+
+    protected:
+
+        virtual size_t get_node_size() const {
+            return reinterpret_cast<size_t>(sizeof(node));
+        }
+
+        virtual void get_node_constructor(node** x, const tkey& key, const tvalue& value) const {
+            new (*x) node{key, value, nullptr, nullptr};
+        }
 
     public:
 
@@ -382,8 +392,8 @@ protected:
             size_t turn;
             tkey_comparer comparer = tkey_comparer();
             if(*root == nullptr){
-                *root = reinterpret_cast<node*>(alloc->allocate(sizeof(node)));
-                new (*root) node{key, value, nullptr, nullptr};
+                *root = reinterpret_cast<node*>(alloc->allocate(get_node_size()));
+                get_node_constructor(root, key, value);
                 if(logger != nullptr) logger->log("Tree node created", logger::severity::debug);
                 return;
             }
@@ -406,8 +416,8 @@ protected:
                     turn == 0  ? &_insert_path.top()->left
                                : &_insert_path.top()->right;
 
-            (*temp) = reinterpret_cast<node*>(alloc->allocate(sizeof(node)));
-            new (*temp) node{key, value, nullptr, nullptr};
+            (*temp) = reinterpret_cast<node*>(alloc->allocate(get_node_size()));
+            get_node_constructor(temp, key, value);
             _insert_path.push(*temp);
             if(logger != nullptr) logger->log("Tree node created", logger::severity::debug);
         }
@@ -442,7 +452,13 @@ protected:
     {
     private:
 
-        stack<node*> _remove_path = stack<node*>();
+        stack<node*> _remove_path = stack<node*>();   ////TODO: LOCAL STACK
+
+    protected:
+
+        virtual void get_node_destructor(node* x) const {
+            x->~node();
+        }
 
     public:
 
@@ -450,7 +466,7 @@ protected:
             node* current = *root;
             size_t turn = 2;
             tkey_comparer comparer = tkey_comparer();
-            while(current != nullptr && current->key != key){
+            while(current != nullptr && (comparer(key, current->key) != 0)){
                 _remove_path.push(current);
                 if(comparer(key, current->key) > 0){
                     current = current->right;
@@ -472,7 +488,7 @@ protected:
                     _remove_path.top()->right = nullptr;
                 }
                 tvalue result = std::move(current->value);
-                current->~node();
+                get_node_destructor(current);
                 alloc->deallocate(reinterpret_cast<void*>(current));
                 if(turn == 2) *root = nullptr;
                 if(logger != nullptr) logger->log("Tree node deleted", logger::severity::debug);
@@ -486,7 +502,7 @@ protected:
                     else turn == 0 ? _remove_path.top()->left = current->right : _remove_path.top()->right = current->right;
                 }
                 tvalue result = std::move(current->value);
-                current->~node();
+                get_node_destructor(current);
                 alloc->deallocate(reinterpret_cast<void*>(current));
                 if(logger != nullptr) logger->log("Tree node deleted", logger::severity::debug);
                 return result;
@@ -499,7 +515,7 @@ protected:
                     current->key = next_node->key;
                     current->value = next_node->value;
                     current->right = next_node->right;
-                    current->~node();
+                    get_node_destructor(current);
                     alloc->deallocate(reinterpret_cast<void*>(next_node));
                     if(logger != nullptr) logger->log("Tree node deleted", logger::severity::debug);
                     return result;
@@ -512,7 +528,7 @@ protected:
                     current->key = next_node->key;
                     current->value = next_node->value;
                     _remove_path.top()->left = next_node->right;
-                    current->~node();
+                    get_node_destructor(current);
                     alloc->deallocate(reinterpret_cast<void*>(next_node));
                     if(logger != nullptr) logger->log("Tree node deleted", logger::severity::debug);
                     return result;
@@ -554,12 +570,12 @@ public:
         if(current == nullptr){
             throw logic_error("Tree is empty!");
         }
-        if(key == current->key) return current->value;
         tkey_comparer comparer = tkey_comparer();
-        while(current->left != nullptr || current->right != nullptr){
+        if(comparer(key, current->key) == 0) return current->value;
+        while((current->left != nullptr && comparer(key, current->key) < 0) || (current->right != nullptr && comparer(key, current->key) > 0)){
             if(comparer(key, current->key) > 0) current = current->right;
             else current = current->left;
-            if(key == current->key) return current->value;
+            if(comparer(key, current->key) == 0) return current->value;
         }
         throw logic_error("Key not found!");
     }
@@ -615,13 +631,17 @@ private:
 public:
 
     explicit binary_search_tree(abstract_allocator* alloc = nullptr, logger* logger = nullptr):
-            _root(nullptr), _allocator(alloc), _logger(logger)
+            binary_search_tree<tkey, tvalue, tkey_comparer>(alloc, logger, new find_template_method(), new insert_template_method(),new remove_template_method())
     {
-        _find = new find_template_method();
-        _insert = new insert_template_method();
-        _remove = new remove_template_method();
         if(_logger != nullptr) _logger->log("Binary_search_tree CREATED!", logger::severity::debug);
     }
+
+protected:
+
+    binary_search_tree(abstract_allocator* alloc, logger* logger, find_template_method *find, insert_template_method *insert, remove_template_method *remove):
+            _allocator(alloc), _logger(logger), _find(find), _insert(insert), _remove(remove), _root(nullptr){}
+
+public:
 
     binary_search_tree(const binary_search_tree<tkey, tvalue, tkey_comparer>& tree):
             _root(nullptr), _allocator(tree._allocator), _logger(tree._logger)
