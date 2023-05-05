@@ -7,4 +7,5 @@ include_directories(.)
 
 add_executable(red_black_tree
         main.cpp
-        red_black_tree.h)
+        red_black_tree.h
+        debug_rb_tree_printing.h)

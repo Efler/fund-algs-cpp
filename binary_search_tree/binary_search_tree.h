@@ -361,19 +361,25 @@ protected:
 public:
 
     void insert(const tkey &key, const tvalue &value) override {
+        stack<node*> _insert_path = stack<node*>();
         node** p_root;
         p_root = &_root;
-        _insert->insert_concrete(key, value, p_root, this->_allocator, this->_logger);
-        _insert->after_insert(key, value, p_root, this->_logger);
+        _insert->insert_concrete(key, value, p_root, this->_allocator, this->_logger, &_insert_path);
+        _insert->after_insert(key, value, p_root, this->_logger, &_insert_path);
     }
 
 protected:
 
     class insert_template_method
     {
+    public:
+
+        explicit insert_template_method(binary_search_tree<tkey, tvalue, tkey_comparer>* this_bst):
+            _this(this_bst){}
+
     private:
 
-        stack<node*> _insert_path = stack<node*>();   ////TODO: LOCAL STACK
+        binary_search_tree<tkey, tvalue, tkey_comparer>* _this;
 
     protected:
 
@@ -387,18 +393,19 @@ protected:
 
     public:
 
-        void insert_concrete(const tkey &key, const tvalue &value, node** root, abstract_allocator* alloc, logger* logger){
+        void insert_concrete(const tkey &key, const tvalue &value, node** root, abstract_allocator* alloc, logger* logger, stack<node*>* _insert_path){
             node* current = *root;
             size_t turn;
             tkey_comparer comparer = tkey_comparer();
             if(*root == nullptr){
                 *root = reinterpret_cast<node*>(alloc->allocate(get_node_size()));
                 get_node_constructor(root, key, value);
+                _insert_path->push(*root);
                 if(logger != nullptr) logger->log("Tree node created", logger::severity::debug);
                 return;
             }
             while(current != nullptr){
-                _insert_path.push(current);
+                _insert_path->push(current);
                 int comp_result = comparer(key, current->key);
                 if(comp_result == 0){
                     throw logic_error("Duplicate key!");
@@ -413,17 +420,17 @@ protected:
             }
 
             node** temp =
-                    turn == 0  ? &_insert_path.top()->left
-                               : &_insert_path.top()->right;
+                    turn == 0  ? &_insert_path->top()->left
+                               : &_insert_path->top()->right;
 
             (*temp) = reinterpret_cast<node*>(alloc->allocate(get_node_size()));
             get_node_constructor(temp, key, value);
-            _insert_path.push(*temp);
+            _insert_path->push(*temp);
             if(logger != nullptr) logger->log("Tree node created", logger::severity::debug);
         }
 
-        virtual void after_insert(const tkey &key, const tvalue &value, node** root, logger* logger){
-            while(!_insert_path.empty()) _insert_path.pop();
+        virtual void after_insert(const tkey &key, const tvalue &value, node** root, logger* logger, stack<node*>* _insert_path){
+            while(!_insert_path->empty()) _insert_path->pop();
             if(logger != nullptr) logger->log("after_insert: stack cleared", logger::severity::debug);
         }
 
@@ -580,6 +587,14 @@ public:
         throw logic_error("Key not found!");
     }
 
+protected:
+
+    virtual void debug_tree_printing_function(node* root) const {
+        debug_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(root));        ////TODO DEBUG!!!!!!!!!!!!!!
+    }
+
+public:
+
     void bypass(typename associative_container<tkey,tvalue>::bypass_mode mode) const override {
         string msg;
         switch(mode){
@@ -591,7 +606,7 @@ public:
                     msg += "   ";
                 }
                 _logger->log(msg, logger::severity::debug);
-                debug_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(_root));        ////TODO DEBUG!!!!!!!!!!!!!!
+                debug_tree_printing_function(_root);                                       ////TODO DEBUG!!!!!!!!!!!!!!
                 break;
             case associative_container<tkey,tvalue>::bypass_mode::infix:
                 for (auto begin = begin_inf(); begin != end_inf(); ++begin){
@@ -601,7 +616,7 @@ public:
                     msg += "   ";
                 }
                 _logger->log(msg, logger::severity::debug);
-                debug_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(_root));        ////TODO DEBUG!!!!!!!!!!!!!!
+                debug_tree_printing_function(_root);                                       ////TODO DEBUG!!!!!!!!!!!!!!
                 break;
             case associative_container<tkey,tvalue>::bypass_mode::postfix:
                 for (auto begin = begin_postf(); begin != end_postf(); ++begin){
@@ -611,7 +626,7 @@ public:
                     msg += "   ";
                 }
                 _logger->log(msg, logger::severity::debug);
-                debug_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(_root));        ////TODO DEBUG!!!!!!!!!!!!!!
+                debug_tree_printing_function(_root);                                       ////TODO DEBUG!!!!!!!!!!!!!!
                 break;
             default:
                 return;
@@ -631,7 +646,7 @@ private:
 public:
 
     explicit binary_search_tree(abstract_allocator* alloc = nullptr, logger* logger = nullptr):
-            binary_search_tree<tkey, tvalue, tkey_comparer>(alloc, logger, new find_template_method(), new insert_template_method(),new remove_template_method())
+            binary_search_tree<tkey, tvalue, tkey_comparer>(alloc, logger, new find_template_method(), new insert_template_method(this),new remove_template_method())
     {
         if(_logger != nullptr) _logger->log("Binary_search_tree CREATED!", logger::severity::debug);
     }
@@ -647,7 +662,7 @@ public:
             _root(nullptr), _allocator(tree._allocator), _logger(tree._logger)
     {
         _find = new find_template_method();
-        _insert = new insert_template_method();
+        _insert = new insert_template_method(this);
         _remove = new remove_template_method();
         auto it = tree.begin_pref();
         auto end = tree.end_pref();
@@ -661,7 +676,7 @@ public:
             _root(tree._root), _allocator(tree._allocator), _logger(tree._logger)
     {
         _find = new find_template_method();
-        _insert = new insert_template_method();
+        _insert = new insert_template_method(this);
         _remove = new remove_template_method();
         tree._root = nullptr;
     };

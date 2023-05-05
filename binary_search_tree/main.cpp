@@ -25,10 +25,10 @@ int main(){
 
 //-----------------------------------------
 
-////strong test
+////stress test
 
     srand(time(nullptr));
-    for(int i = 0; i < 200; ++i){
+    for(int i = 0; i < 300; ++i){
         int action = rand() % 3;
         int bp_mode = rand() % 3;
 
