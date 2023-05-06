@@ -443,13 +443,15 @@ protected:
 public:
 
     tvalue remove(const tkey &key) override {
+        size_t side, additional;
+        stack<node*> _remove_path = stack<node*>();
         if(_root == nullptr){
             throw logic_error("Tree is empty!");
         }
         node** p_root;
         p_root = &_root;
-        tvalue result = _remove->remove_concrete(key, p_root, this->_allocator, this->_logger);
-        _remove->after_remove(key, p_root, this->_logger);
+        tvalue result = _remove->remove_concrete(key, p_root, this->_allocator, this->_logger, &_remove_path, side, additional);
+        _remove->after_remove(key, p_root, this->_logger, &_remove_path, side, additional);
         return result;
     }
 
@@ -457,9 +459,14 @@ protected:
 
     class remove_template_method
     {
+    public:
+
+        explicit remove_template_method(binary_search_tree<tkey, tvalue, tkey_comparer>* this_bst):
+        _this(this_bst){}
+
     private:
 
-        stack<node*> _remove_path = stack<node*>();   ////TODO: LOCAL STACK
+        binary_search_tree<tkey, tvalue, tkey_comparer>* _this;
 
     protected:
 
@@ -467,14 +474,16 @@ protected:
             x->~node();
         }
 
+        virtual void additional_work(node* current, node* dad, size_t& side, size_t& additional) const {}
+
     public:
 
-        tvalue remove_concrete(const tkey &key, node** root, abstract_allocator* alloc, logger* logger){
+        tvalue remove_concrete(const tkey &key, node** root, abstract_allocator* alloc, logger* logger, stack<node*>* _remove_path, size_t& side, size_t& additional){
             node* current = *root;
             size_t turn = 2;
             tkey_comparer comparer = tkey_comparer();
             while(current != nullptr && (comparer(key, current->key) != 0)){
-                _remove_path.push(current);
+                _remove_path->push(current);
                 if(comparer(key, current->key) > 0){
                     current = current->right;
                     turn = 1;
@@ -489,10 +498,13 @@ protected:
                 throw logic_error("Key not found!");
             }
             if(current->right == nullptr && current->left == nullptr){
+
+                if(turn != 2) additional_work(current, _remove_path->top(), side, additional);
+
                 if(turn == 0){
-                    _remove_path.top()->left = nullptr;
+                    _remove_path->top()->left = nullptr;
                 }else if(turn == 1){
-                    _remove_path.top()->right = nullptr;
+                    _remove_path->top()->right = nullptr;
                 }
                 tvalue result = std::move(current->value);
                 get_node_destructor(current);
@@ -501,12 +513,19 @@ protected:
                 if(logger != nullptr) logger->log("Tree node deleted", logger::severity::debug);
                 return result;
             }else if((current->right != nullptr && current->left == nullptr) || (current->right == nullptr && current->left != nullptr)){
+
+                if(!_remove_path->empty()) additional_work(current, _remove_path->top(), side, additional);
+
                 if(current->right == nullptr && current->left != nullptr){
-                    if(current == *root) *root = current->left;
-                    else turn == 0 ? _remove_path.top()->left = current->left : _remove_path.top()->right = current->left;
+                    if(current == *root){
+                        *root = current->left;
+                    }
+                    else turn == 0 ? _remove_path->top()->left = current->left : _remove_path->top()->right = current->left;
                 }else{
-                    if(current == *root) *root = current->right;
-                    else turn == 0 ? _remove_path.top()->left = current->right : _remove_path.top()->right = current->right;
+                    if(current == *root){
+                        *root = current->right;
+                    }
+                    else turn == 0 ? _remove_path->top()->left = current->right : _remove_path->top()->right = current->right;
                 }
                 tvalue result = std::move(current->value);
                 get_node_destructor(current);
@@ -515,9 +534,12 @@ protected:
                 return result;
             }else if(current->right != nullptr && current->left != nullptr){
                 node* next_node = current;
-                _remove_path.push(current);
+                _remove_path->push(current);
                 next_node = next_node->right;
                 if(next_node->left == nullptr){
+
+                    additional_work(next_node, current, side, additional);
+
                     tvalue result = std::move(current->value);
                     current->key = next_node->key;
                     current->value = next_node->value;
@@ -528,13 +550,16 @@ protected:
                     return result;
                 }else{
                     while(next_node->left != nullptr){
-                        _remove_path.push(next_node);
+                        _remove_path->push(next_node);
                         next_node = next_node->left;
                     }
+
+                    additional_work(next_node, _remove_path->top(), side, additional);
+
                     tvalue result = std::move(current->value);
                     current->key = next_node->key;
                     current->value = next_node->value;
-                    _remove_path.top()->left = next_node->right;
+                    _remove_path->top()->left = next_node->right;
                     get_node_destructor(current);
                     alloc->deallocate(reinterpret_cast<void*>(next_node));
                     if(logger != nullptr) logger->log("Tree node deleted", logger::severity::debug);
@@ -543,8 +568,8 @@ protected:
             }
         }
 
-        virtual void after_remove(const tkey &key, node** root, logger* logger){
-            while(!_remove_path.empty()) _remove_path.pop();
+        virtual void after_remove(const tkey &key, node** root, logger* logger, stack<node*>* _remove_path, size_t& side, size_t& additional){
+            while(!_remove_path->empty()) _remove_path->pop();
             logger->log("after_remove: stack cleared", logger::severity::debug);
         }
 
@@ -646,7 +671,7 @@ private:
 public:
 
     explicit binary_search_tree(abstract_allocator* alloc = nullptr, logger* logger = nullptr):
-            binary_search_tree<tkey, tvalue, tkey_comparer>(alloc, logger, new find_template_method(), new insert_template_method(this),new remove_template_method())
+            binary_search_tree<tkey, tvalue, tkey_comparer>(alloc, logger, new find_template_method(), new insert_template_method(this),new remove_template_method(this))
     {
         if(_logger != nullptr) _logger->log("Binary_search_tree CREATED!", logger::severity::debug);
     }
@@ -663,7 +688,7 @@ public:
     {
         _find = new find_template_method();
         _insert = new insert_template_method(this);
-        _remove = new remove_template_method();
+        _remove = new remove_template_method(this);
         auto it = tree.begin_pref();
         auto end = tree.end_pref();
         for(; it != end; ++it){
@@ -677,7 +702,7 @@ public:
     {
         _find = new find_template_method();
         _insert = new insert_template_method(this);
-        _remove = new remove_template_method();
+        _remove = new remove_template_method(this);
         tree._root = nullptr;
     };
 

@@ -23,11 +23,12 @@ int main(){
     associative_container<int, string>* rbt = new red_black_tree<int, string, my_int_comparer>(allocator, logger1);
 
     srand(time(nullptr));
-    for(int i = 0; i < 100; ++i){
-        int action = rand() % 1;
+    for(int i = 0; i < 1000; ++i){
+        cout << "== iteration #" << i+1 << " ==" << endl;
+        int action = rand() % 3;
         int bp_mode = rand() % 3;
 
-        int random_key = rand() % 21;
+        int random_key = rand() % 56;
         string value_str = "str";
         string result;
         switch(action){

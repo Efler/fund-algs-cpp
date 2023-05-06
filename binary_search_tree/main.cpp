@@ -29,6 +29,7 @@ int main(){
 
     srand(time(nullptr));
     for(int i = 0; i < 300; ++i){
+        cout << "== iteration #" << i+1 << " ==" << endl;
         int action = rand() % 3;
         int bp_mode = rand() % 3;
 
