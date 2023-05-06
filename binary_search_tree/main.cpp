@@ -23,9 +23,11 @@ int main(){
     associative_container<int, string>* bst = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
 //    auto* bst = new binary_search_tree<int, string, my_int_comparer>(allocator, logger1);
 
+
+
 //-----------------------------------------
 
-////stress test
+//stress test
 
     srand(time(nullptr));
     for(int i = 0; i < 300; ++i){

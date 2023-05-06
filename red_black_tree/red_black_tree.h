@@ -48,7 +48,7 @@ private:
     private:
 
         size_t get_node_size() const override {
-            return reinterpret_cast<size_t>(sizeof(rb_node));
+            return sizeof(rb_node);
         }
 
         void get_node_constructor(typename binary_search_tree<tkey, tvalue, tkey_comparer>::node** x, const tkey& key, const tvalue& value) const override {
@@ -534,6 +534,24 @@ private:
         debug_rb_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(root));
     }
 
+    ///*-------------------- ADDITIONAL FUNCTIONS FIELD --------------------*///
+
+    void copy_additional_data(typename binary_search_tree<tkey, tvalue, tkey_comparer>::node* copied_node, typename binary_search_tree<tkey, tvalue, tkey_comparer>::node* to_copy) const override {
+        auto* rb_copied_node = reinterpret_cast<rb_node*>(copied_node);
+        auto* rb_to_copy = reinterpret_cast<rb_node*>(to_copy);
+        rb_copied_node->node_color = rb_to_copy->node_color;
+    }
+
+    size_t get_node_size() const override {
+        return sizeof(rb_node);
+    }
+
+    void get_node_constructor(typename binary_search_tree<tkey, tvalue, tkey_comparer>::node* copied_node, typename binary_search_tree<tkey, tvalue, tkey_comparer>::node* to_copy) const override {
+        auto* rb_copied_node = reinterpret_cast<rb_node*>(copied_node);
+        auto* rb_to_copy = reinterpret_cast<rb_node*>(to_copy);
+        new (rb_copied_node) rb_node { rb_to_copy->key, rb_to_copy->value, reinterpret_cast<rb_node*>(this->copy_inner(rb_to_copy->left)), reinterpret_cast<rb_node*>(this->copy_inner(rb_to_copy->right)), rb_to_copy->node_color};
+    }
+
     ///*-------------------- TREE CONSTRUCTORS FIELD --------------------*///
 
 public:
@@ -545,26 +563,67 @@ public:
     }
 
     red_black_tree(const red_black_tree<tkey, tvalue, tkey_comparer>& tree){
-        //TODO
+        this->_logger = tree._logger;
+        this->_allocator = tree._allocator;
+        this->_find = new typename binary_search_tree<tkey, tvalue, tkey_comparer>::find_template_method();
+        this->_insert = new rb_insert_template_method(this);
+        this->_remove = new rb_remove_template_method(this);
+        this->_root = tree.copy();
+        if(this->_logger != nullptr) this->_logger->log("Red_black_tree COPIED!", logger::severity::debug);
     }
 
     red_black_tree(red_black_tree<tkey, tvalue, tkey_comparer>&& tree) noexcept {
-        //TODO
+        this->_root = tree._root;
+        this->_allocator = tree._allocator;
+        this->_logger = tree._logger;
+        this->_find = new typename binary_search_tree<tkey, tvalue, tkey_comparer>::find_template_method();
+        this->_insert = new rb_insert_template_method(this);
+        this->_remove = new rb_remove_template_method(this);
+        delete tree._find;
+        delete tree._insert;
+        delete tree._remove;
+        tree._allocator = nullptr;
+        tree._logger = nullptr;
+        tree._insert = nullptr;
+        tree._find = nullptr;
+        tree._remove = nullptr;
+        tree._root = nullptr;
+        if(this->_logger) this->_logger ->log("Red_black_tree MOVED!", logger::severity::debug);
     }
 
     red_black_tree<tkey, tvalue, tkey_comparer>& operator=(const red_black_tree<tkey, tvalue, tkey_comparer>& tree){
-        //TODO
+        if(this != &tree){
+            this->clear();
+            this->_root = tree.copy();
+        }
+        if(this->_logger != nullptr) this->_logger->log("Red_black_tree ASSIGNED!", logger::severity::debug);
+        return *this;
     }
 
     red_black_tree<tkey, tvalue, tkey_comparer>& operator=(red_black_tree<tkey, tvalue, tkey_comparer>&& tree) noexcept {
-        //TODO
+        if(&tree != this){
+            this->clear();
+            this->_root = tree._root;
+            this->_logger = tree._logger;
+            this->_allocator = tree._allocator;
+            delete tree._find;
+            delete tree._insert;
+            delete tree._remove;
+            tree._root = nullptr;
+            tree._allocator = nullptr;
+            tree._logger = nullptr;
+            tree._insert = nullptr;
+            tree._find = nullptr;
+            tree._remove = nullptr;
+        }
+        if(this->_logger != nullptr) this->_logger->log("Red_black_tree MOVED!", logger::severity::debug);
+        return *this;
     }
 
     ///*-------------------- TREE DESTRUCTOR FIELD --------------------*///
 
     ~red_black_tree(){
-        //logger ???
-        ///TODO:
+        if(this->_logger) this->_logger->log("Red_black_tree DELETED!", logger::severity::debug);
     }
 
 };

@@ -4,13 +4,15 @@
 #include "../allocator_2/abstract_allocator.h"
 #include "../logger/logger_builder.h"
 #include "make_string.h"
-#include "debug_tree_printing.h"   ///TODO DEBUG!!!!!!!!!!!!!!!!!!!!
+#include "debug_tree_printing.h"
 #include <stack>
 
 
 template <typename tkey, typename tvalue, typename tkey_comparer>
 class binary_search_tree: public associative_container<tkey, tvalue>
 {
+
+    ///*-------------------- TREE NODE FIELD --------------------*///
 
 protected:
 
@@ -26,6 +28,8 @@ protected:
 
         virtual ~node() = default;
     };
+
+    ///*-------------------- PREFIX ITERATOR FIELD --------------------*///
 
 public:
 
@@ -64,6 +68,8 @@ public:
             }
         }
 
+    public:
+
         bool operator==(pref_iterator const & other) const {
             return _current_node == other._current_node && _path == other._path;
         }
@@ -72,9 +78,17 @@ public:
             return !(*this == other);
         }
 
-        tuple<tkey const &, tvalue const &, unsigned int, node*> operator*(){
-            return tuple<tkey const &, tvalue const &, unsigned int, node*>(_current_node->key, _current_node->value, _path.size(), _current_node);
+        tuple<tkey const &, tvalue const &, unsigned int> operator*(){
+            return tuple<tkey const &, tvalue const &, unsigned int>(_current_node->key, _current_node->value, _path.size());
         }
+
+    private:
+
+        node* get_current_node() const {
+            return _current_node;
+        }
+
+    public:
 
         pref_iterator& operator++(){
             if(_current_node == nullptr) return *this;
@@ -128,6 +142,7 @@ public:
         return pref_iterator(_root, nullptr);
     }
 
+    ///*-------------------- INFIX ITERATOR FIELD --------------------*///
 
     class inf_iterator final
     {
@@ -164,6 +179,8 @@ public:
             }
         }
 
+    public:
+
         bool operator==(inf_iterator const & other) const {
             if (_current_node == other._current_node && _path == other._path) return true;
             else return false;
@@ -173,9 +190,17 @@ public:
             return !(*this == other);
         }
 
-        tuple<tkey const &, tvalue const &, unsigned int, node*> operator*(){
-            return tuple<tkey const &, tvalue const &, unsigned int, node*>(_current_node->key, _current_node->value, _path.size(), _current_node);
+        tuple<tkey const &, tvalue const &, unsigned int> operator*(){
+            return tuple<tkey const &, tvalue const &, unsigned int>(_current_node->key, _current_node->value, _path.size());
         }
+
+    private:
+
+        node* get_current_node() const {
+            return _current_node;
+        }
+
+    public:
 
         inf_iterator& operator++(){
             if(_current_node == nullptr) return *this;
@@ -224,6 +249,7 @@ public:
         return inf_iterator(_root, nullptr);
     }
 
+    ///*-------------------- POSTFIX ITERATOR FIELD --------------------*///
 
     class postf_iterator final
     {
@@ -260,6 +286,8 @@ public:
             }
         }
 
+    public:
+
         bool operator==(postf_iterator const & other) const {
             if (_current_node == other._current_node && _path == other._path) return true;
             else return false;
@@ -269,9 +297,17 @@ public:
             return !(*this == other);
         }
 
-        tuple<tkey const &, tvalue const &, unsigned int, node*> operator*(){
-            return tuple<tkey const &, tvalue const &, unsigned int, node*>(_current_node->key, _current_node->value, _path.size(), _current_node);
+        tuple<tkey const &, tvalue const &, unsigned int> operator*(){
+            return tuple<tkey const &, tvalue const &, unsigned int>(_current_node->key, _current_node->value, _path.size());
         }
+
+    private:
+
+        node* get_current_node() const {
+            return _current_node;
+        }
+
+    public:
 
         postf_iterator& operator++(){
             if(_current_node == nullptr) return *this;
@@ -320,6 +356,7 @@ public:
         return postf_iterator(_root, nullptr);
     }
 
+    ///*-------------------- FIND FIELD --------------------*///
 
 public:
 
@@ -329,6 +366,8 @@ public:
         _find->after_find(target_key_and_result_value, _root);
         return result;
     }
+
+    ///*-------------------- FIND_TEMPLATE_METHOD FIELD --------------------*///
 
 protected:
 
@@ -358,6 +397,8 @@ protected:
 
     };
 
+    ///*-------------------- INSERT FIELD --------------------*///
+
 public:
 
     void insert(const tkey &key, const tvalue &value) override {
@@ -367,6 +408,8 @@ public:
         _insert->insert_concrete(key, value, p_root, this->_allocator, this->_logger, &_insert_path);
         _insert->after_insert(key, value, p_root, this->_logger, &_insert_path);
     }
+
+    ///*-------------------- INSERT_TEMPLATE_METHOD FIELD --------------------*///
 
 protected:
 
@@ -440,6 +483,8 @@ protected:
 
     };
 
+    ///*-------------------- REMOVE FIELD --------------------*///
+
 public:
 
     tvalue remove(const tkey &key) override {
@@ -454,6 +499,8 @@ public:
         _remove->after_remove(key, p_root, this->_logger, &_remove_path, side, additional);
         return result;
     }
+
+    ///*-------------------- REMOVE_TEMPLATE_METHOD FIELD --------------------*///
 
 protected:
 
@@ -579,6 +626,8 @@ protected:
 
     };
 
+    ///*-------------------- ROTATES FIELD --------------------*///
+
 protected:
 
     void rotate_left(node** subtree_root) const {
@@ -594,6 +643,8 @@ protected:
         tmp->right = (*subtree_root);
         (*subtree_root) = tmp;
     }
+
+    ///*-------------------- GET FIELD --------------------*///
 
 public:
 
@@ -612,11 +663,15 @@ public:
         throw logic_error("Key not found!");
     }
 
+    ///*-------------------- TREE DEBUG_PRINTING FIELD --------------------*///
+
 protected:
 
     virtual void debug_tree_printing_function(node* root) const {
-        debug_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(root));        ////TODO DEBUG!!!!!!!!!!!!!!
+        debug_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(root));
     }
+
+    ///*-------------------- BYPASS FIELD --------------------*///
 
 public:
 
@@ -630,8 +685,8 @@ public:
                     msg += make_string(std::get<1>(*begin));
                     msg += "   ";
                 }
-                _logger->log(msg, logger::severity::debug);
-                debug_tree_printing_function(_root);                                       ////TODO DEBUG!!!!!!!!!!!!!!
+                if(_logger != nullptr) _logger->log(msg, logger::severity::debug);
+                debug_tree_printing_function(_root);
                 break;
             case associative_container<tkey,tvalue>::bypass_mode::infix:
                 for (auto begin = begin_inf(); begin != end_inf(); ++begin){
@@ -640,8 +695,8 @@ public:
                     msg += make_string(std::get<1>(*begin));
                     msg += "   ";
                 }
-                _logger->log(msg, logger::severity::debug);
-                debug_tree_printing_function(_root);                                       ////TODO DEBUG!!!!!!!!!!!!!!
+                if(_logger != nullptr) _logger->log(msg, logger::severity::debug);
+                debug_tree_printing_function(_root);
                 break;
             case associative_container<tkey,tvalue>::bypass_mode::postfix:
                 for (auto begin = begin_postf(); begin != end_postf(); ++begin){
@@ -650,16 +705,17 @@ public:
                     msg += make_string(std::get<1>(*begin));
                     msg += "   ";
                 }
-                _logger->log(msg, logger::severity::debug);
-                debug_tree_printing_function(_root);                                       ////TODO DEBUG!!!!!!!!!!!!!!
+                if(_logger != nullptr) _logger->log(msg, logger::severity::debug);
+                debug_tree_printing_function(_root);
                 break;
             default:
                 return;
         }
     }
 
+    ///*-------------------- BINARY_SEARCH_TREE CLASS FIELDS --------------------*///
 
-private:
+protected:
 
     node* _root;
     abstract_allocator* _allocator;
@@ -667,6 +723,50 @@ private:
     find_template_method* _find;
     insert_template_method* _insert;
     remove_template_method* _remove;
+
+    ///*-------------------- ADDITIONAL METHODS FIELD --------------------*///
+
+protected:
+
+    void clear(){
+        clear_inner(_root);
+    }
+
+    void clear_inner(node *n){
+        if (n == nullptr) return;
+
+        auto *left_subtree = n->left;
+        auto *right_subtree = n->right;
+        n->~node();
+        _allocator->deallocate(reinterpret_cast<void*>(n));
+
+        clear_inner(left_subtree);
+        clear_inner(right_subtree);
+    }
+
+    node* copy() const {
+        return copy_inner(_root);
+    }
+
+    node* copy_inner(node* to_copy) const {
+        if (to_copy == nullptr) return nullptr;
+
+        auto *copied_node = reinterpret_cast<node *>(_allocator->allocate(get_node_size()));
+        get_node_constructor(copied_node, to_copy);
+        copy_additional_data(copied_node, to_copy);
+    }
+
+    virtual void copy_additional_data(node* copied_node, node* to_copy) const {}
+
+    virtual size_t get_node_size() const {
+        return sizeof(node);
+    }
+
+    virtual void get_node_constructor(node* copied_node, node* to_copy) const {
+        new (copied_node) node { to_copy->key, to_copy->value, copy_inner(to_copy->left), copy_inner(to_copy->right) };
+    }
+
+    ///*-------------------- TREE CONSTRUCTORS FIELD --------------------*///
 
 public:
 
@@ -684,72 +784,61 @@ protected:
 public:
 
     binary_search_tree(const binary_search_tree<tkey, tvalue, tkey_comparer>& tree):
-            _root(nullptr), _allocator(tree._allocator), _logger(tree._logger)
+            binary_search_tree<tkey, tvalue, tkey_comparer>(tree._allocator, tree._logger)
     {
-        _find = new find_template_method();
-        _insert = new insert_template_method(this);
-        _remove = new remove_template_method(this);
-        auto it = tree.begin_pref();
-        auto end = tree.end_pref();
-        for(; it != end; ++it){
-            this->insert(std::get<0>(*it), std::get<1>(*it));
-        }
-        if(_logger != nullptr) _logger->log("Binary_search_tree CREATED!", logger::severity::debug);
-    };
+        _root = tree.copy();
+        if(_logger != nullptr) _logger->log("Binary_search_tree COPIED!", logger::severity::debug);
+    }
 
     binary_search_tree(binary_search_tree<tkey, tvalue, tkey_comparer>&& tree) noexcept :
-            _root(tree._root), _allocator(tree._allocator), _logger(tree._logger)
+            binary_search_tree<tkey, tvalue, tkey_comparer>(tree._allocator, tree._logger, tree._find, tree._insert, tree._remove)
     {
-        _find = new find_template_method();
-        _insert = new insert_template_method(this);
-        _remove = new remove_template_method(this);
+        _root = tree._root;
         tree._root = nullptr;
-    };
+        tree._allocator = nullptr;
+        tree._logger = nullptr;
+        tree._insert = nullptr;
+        tree._find = nullptr;
+        tree._remove = nullptr;
+        if(_logger != nullptr) _logger->log("Binary_search_tree MOVED!", logger::severity::debug);
+    }
 
     binary_search_tree<tkey, tvalue, tkey_comparer>& operator=(const binary_search_tree<tkey, tvalue, tkey_comparer>& tree){
-        if(this != &tree){
-            postf_iterator begin = begin_postf();
-            postf_iterator end = end_postf();
-            for(; begin != end; ++begin){
-                std::get<3>(*begin)->~node();
-                _allocator->deallocate(reinterpret_cast<void*>(std::get<3>(*begin)));
-                if(_logger != nullptr) _logger->log("OPERATOR=: Tree node deleted!", logger::severity::debug);
-            }
-            auto it = tree.begin_pref();
-            auto t_end = tree.end_pref();
-            for(; it != t_end; ++it){
-                this->insert(std::get<0>(*it), std::get<1>(*it));
-            }
-            if(_logger != nullptr) _logger->log("Binary_search_tree COPIED!", logger::severity::debug);
-        }
-
+        if (this == &tree) return *this;
+        clear();
+        _root = tree.copy();
+        if(_logger != nullptr) _logger->log("Binary_search_tree ASSIGNED!", logger::severity::debug);
         return *this;
     }
 
     binary_search_tree<tkey, tvalue, tkey_comparer>& operator=(binary_search_tree<tkey, tvalue, tkey_comparer>&& tree) noexcept {
         if(&tree != this){
-            postf_iterator begin = begin_postf();
-            postf_iterator end = end_postf();
-            for(; begin != end; ++begin){
-                std::get<3>(*begin)->~node();
-                _allocator->deallocate(reinterpret_cast<void*>(std::get<3>(*begin)));
-                if(_logger != nullptr) _logger->log("OPERATOR=: Tree node deleted!", logger::severity::debug);
-            }
-            this->_allocator = tree._allocator;
-            this->_root = tree._root;
+            clear();
+            _root = tree._root;
+            _logger = tree._logger;
+            _allocator = tree._allocator;
+            delete tree._find;
+            delete tree._insert;
+            delete tree._remove;
             tree._root = nullptr;
+            tree._allocator = nullptr;
+            tree._logger = nullptr;
+            tree._insert = nullptr;
+            tree._find = nullptr;
+            tree._remove = nullptr;
             if(_logger != nullptr) _logger->log("Binary_search_tree MOVED!", logger::severity::debug);
         }
-
         return *this;
     }
+
+    ///*-------------------- TREE DESTRUCTOR FIELD --------------------*///
 
     ~binary_search_tree(){
         postf_iterator begin = begin_postf();
         postf_iterator end = end_postf();
         for(; begin != end; ++begin){
-            std::get<3>(*begin)->~node();
-            _allocator->deallocate(reinterpret_cast<void*>(std::get<3>(*begin)));
+            begin.get_current_node()->~node();
+            _allocator->deallocate(reinterpret_cast<void*>(begin.get_current_node()));
             if(_logger != nullptr) _logger->log("DESTRUCTOR: Tree node deleted!", logger::severity::debug);
         }
 

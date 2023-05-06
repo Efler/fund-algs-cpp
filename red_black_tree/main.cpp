@@ -18,9 +18,72 @@ int main(){
     auto* builder = new logger_builder();
 
     logger* logger1 = builder->add_stream("console", logger::severity::debug)
-            ->build();
+                             ->build();
     abstract_allocator* allocator = new allocator_3(50000, allocator_3::mode::best);
     associative_container<int, string>* rbt = new red_black_tree<int, string, my_int_comparer>(allocator, logger1);
+//    auto* rbt = new red_black_tree<int, string, my_int_comparer>(allocator, logger1);
+
+//---------------------------------
+//constructors test
+//
+//
+//    auto k = associative_container<int, std::string>::key_value_pair{0, std::move(std::string("1234"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{-1, std::move(std::string("2345"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{1, std::move(std::string("3456"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{-2, std::move(std::string("4567"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{2, std::move(std::string("5678"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{-3, std::move(std::string("6789"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{3, std::move(std::string("7890"))};
+//    *rbt += k;
+//
+//    rbt->bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" <<endl;
+//
+//    auto* rbt2 = new red_black_tree<int, string, my_int_comparer>(*rbt);
+//
+//    rbt->bypass(associative_container<int, string>::bypass_mode::infix);
+//    rbt2->bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" <<endl;
+//
+//    auto* rbt3 = new red_black_tree<int, string, my_int_comparer>(std::move(*rbt2));
+//
+//    rbt->bypass(associative_container<int, string>::bypass_mode::infix);
+//    rbt2->bypass(associative_container<int, string>::bypass_mode::infix);
+//    rbt3->bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" <<endl;
+//
+//    auto* rbt4 = new red_black_tree<int, string, my_int_comparer>(allocator, logger1);
+//    (*rbt4) = (*rbt3);
+//
+//    rbt->bypass(associative_container<int, string>::bypass_mode::infix);
+//    rbt2->bypass(associative_container<int, string>::bypass_mode::infix);
+//    rbt3->bypass(associative_container<int, string>::bypass_mode::infix);
+//    rbt4->bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" <<endl;
+//
+//    auto* rbt5 = new red_black_tree<int, string, my_int_comparer>(allocator, logger1);
+//    (*rbt5) = std::move(*rbt3);
+//
+//    rbt->bypass(associative_container<int, string>::bypass_mode::infix);
+//    rbt2->bypass(associative_container<int, string>::bypass_mode::infix);
+//    rbt3->bypass(associative_container<int, string>::bypass_mode::infix);
+//    rbt4->bypass(associative_container<int, string>::bypass_mode::infix);
+//    rbt5->bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" <<endl;
+//
+//    delete rbt5;
+//    delete rbt4;
+//    delete rbt3;
+//    delete rbt2;
+
+//-------------------------------------
+//stress test
 
     srand(time(nullptr));
     for(int i = 0; i < 1000; ++i){
