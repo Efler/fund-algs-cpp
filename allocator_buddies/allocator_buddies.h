@@ -118,13 +118,13 @@ private:
         debug_msg += "(";
         debug_msg += to_string(target_size);
         debug_msg += ") BYTES";
-        memory_logger()->log(debug_msg, logger::severity::trace);
+        if(memory_logger() != nullptr) memory_logger()->log(debug_msg, logger::severity::trace);
         debug_msg = "~SPLITTING DEBUG~ - HALF OF A BLOCK: ";
         debug_msg += to_string(1 << (block_size_power(p) - 1));
 
         if(1 << (block_size_power(p) - 1) >= target_size + sizeof(void*) + sizeof(void*) + sizeof(unsigned char)){
             debug_msg += " BYTES, SIZE FITS: SPLITTING...";
-            memory_logger()->log(debug_msg, logger::severity::trace);
+            if(memory_logger() != nullptr) memory_logger()->log(debug_msg, logger::severity::trace);
 
             void* p_new = reinterpret_cast<void*>(reinterpret_cast<unsigned char*>(block_pool(p)) + ((1 << (block_size_power(p) - 1)) - sizeof(void*) - sizeof(void*) - sizeof(unsigned char)));
             auto* p_new2 = p_new;
@@ -142,7 +142,7 @@ private:
 
         }else{
             debug_msg += "BYTES, SIZE IS INVALID: STOP SPLIT !!";
-            memory_logger()->log(debug_msg, logger::severity::trace);
+            if(memory_logger() != nullptr) memory_logger()->log(debug_msg, logger::severity::trace);
 
             if(*p == nullptr){
                 if(next(p) == nullptr){
@@ -182,7 +182,7 @@ private:
 
     void** merging_blocks(void** p) const {
         string debug_msg = "~MERGING DEBUG~ - TRYING TO MERGE...";
-        memory_logger()->log(debug_msg, logger::severity::trace);
+        if(memory_logger() != nullptr) memory_logger()->log(debug_msg, logger::severity::trace);
 
         if(!block_freedom(p)) change_freedom(p);
 
@@ -197,7 +197,7 @@ private:
         if(p_forward != nullptr && (block_size_power(p_forward) == block_size_power(p) && block_freedom(p_forward))){
             debug_msg = "~MERGING DEBUG~ - BUDDY IN FRONT, POWER: ";
             debug_msg += to_string(block_size_power(p_forward));
-            memory_logger()->log(debug_msg, logger::severity::trace);
+            if(memory_logger() != nullptr) memory_logger()->log(debug_msg, logger::severity::trace);
 
             size_t x = block_size_power(p);
             *block_size_power_pointer(p) = static_cast<unsigned char>((x + 1) << 1);
@@ -224,7 +224,7 @@ private:
         }else if(p_backward != nullptr && (block_size_power(p_backward) == block_size_power(p) && block_freedom(p_backward))){
             debug_msg = "~MERGING DEBUG~ - BUDDY IS BEHIND, POWER: ";
             debug_msg += to_string(block_size_power(p_backward));
-            memory_logger()->log(debug_msg, logger::severity::trace);
+            if(memory_logger() != nullptr) memory_logger()->log(debug_msg, logger::severity::trace);
 
             size_t x = block_size_power(p);
             *block_size_power_pointer(p_backward) = static_cast<unsigned char>((x + 1) << 1);
@@ -250,7 +250,7 @@ private:
 
         }else{
             debug_msg = "~MERGING DEBUG~ - CANNOT MERGE, STOP MERGING!!";
-            memory_logger()->log(debug_msg, logger::severity::trace);
+            if(memory_logger() != nullptr) memory_logger()->log(debug_msg, logger::severity::trace);
 
             void** p_prev = nullptr;
             void** p_after = memory_first_block();
@@ -343,7 +343,7 @@ public:
             debug_msg += " ] ";
             p = next(p);
         }
-        memory_logger()->log(debug_msg, logger::severity::trace);
+        if(memory_logger() != nullptr) memory_logger()->log(debug_msg, logger::severity::trace);
 
         if(memory_logger() != nullptr){
             string msg = "ALLOCATOR DELETED";
@@ -405,7 +405,7 @@ public:
             debug_msg += " ] ";
             p1 = next(p1);
         }
-        memory_logger()->log(debug_msg, logger::severity::trace);
+        if(memory_logger() != nullptr) memory_logger()->log(debug_msg, logger::severity::trace);
 
         if(memory_logger() != nullptr){
             string msg = "Allocation complete, address: ";
@@ -440,7 +440,7 @@ public:
             debug_msg += " ] ";
             p1 = next(p1);
         }
-        memory_logger()->log(debug_msg, logger::severity::trace);
+        if(memory_logger() != nullptr) memory_logger()->log(debug_msg, logger::severity::trace);
 
         if(memory_logger() != nullptr){
             string msg = "Deallocation complete, address: ";
