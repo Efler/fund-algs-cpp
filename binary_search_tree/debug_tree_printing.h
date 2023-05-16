@@ -6,6 +6,7 @@
 #include <functional>
 #include <iostream>
 #include <vector>
+#include "make_string.h"
 
 
 template <typename tkey, typename tvalue>
@@ -52,7 +53,7 @@ void debug_tree_printing(void* root) {
         std::vector<std::string> lines;
         if (!node_concrete)
             return std::make_tuple(lines, size_t(0), size_t(0));
-        auto sval = std::to_string(node_concrete->key);
+        auto sval = make_string(node_concrete->key);
         auto resl = Rec(node_concrete->left, true), resr = Rec(node_concrete->right, false);
         auto const & vl = std::get<0>(resl);
         auto const & vr = std::get<0>(resr);

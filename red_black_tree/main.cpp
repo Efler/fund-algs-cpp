@@ -23,6 +23,37 @@ int main(){
     associative_container<int, string>* rbt = new red_black_tree<int, string, my_int_comparer>(allocator, logger1);
 //    auto* rbt = new red_black_tree<int, string, my_int_comparer>(allocator, logger1);
 
+//{
+//    auto k = associative_container<int, std::string>::key_value_pair{0, std::move(std::string("1234"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{-1, std::move(std::string("2345"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{1, std::move(std::string("3456"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{-2, std::move(std::string("4567"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{2, std::move(std::string("5678"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{-3, std::move(std::string("6789"))};
+//    *rbt += k;
+//    k = associative_container<int, std::string>::key_value_pair{3, std::move(std::string("7890"))};
+//    *rbt += k;
+//
+//    rbt->bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" << endl;
+//
+//    auto rbt2 = red_black_tree<int, string, my_int_comparer>(*rbt);
+//    rbt->bypass(associative_container<int, string>::bypass_mode::infix);
+//    rbt2.bypass(associative_container<int, string>::bypass_mode::infix);
+//    cout << "---" << endl;
+//
+//    delete rbt;
+//
+//    rbt2.bypass(associative_container<int, string>::bypass_mode::infix);
+//}
+
+
+
 //---------------------------------
 //constructors test
 //

@@ -6,6 +6,7 @@
 #include <functional>
 #include <iostream>
 #include <vector>
+#include "../binary_search_tree/make_string.h"
 
 
 enum class debug_color{
@@ -58,7 +59,7 @@ void debug_rb_tree_printing(void* root) {
         std::vector<std::string> lines;
         if (!node_concrete)
             return std::make_tuple(lines, size_t(0), size_t(0));
-        auto sval = std::to_string(node_concrete->key);
+        auto sval = make_string(node_concrete->key);
         if(node_concrete->node_color == debug_color::red) sval += "[R]";
         else sval += "[B]";
         auto resl = Rec(node_concrete->left, true), resr = Rec(node_concrete->right, false);
