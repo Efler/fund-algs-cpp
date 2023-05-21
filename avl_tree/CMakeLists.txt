@@ -7,4 +7,4 @@ include_directories(.)
 
 add_executable(avl_tree
         avl_tree.h
-        main.cpp)
+        main.cpp debug_avl_tree_printing.h)
