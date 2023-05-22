@@ -4,4 +4,4 @@ project(coursework)
 set(CMAKE_CXX_STANDARD 14)
 
 add_executable(coursework
-        main.cpp)
+        main.cpp database.h)
