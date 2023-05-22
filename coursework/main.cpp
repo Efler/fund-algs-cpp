@@ -9,8 +9,139 @@ int main(int argc, char* argv[]){
     logger* logger = builder->add_stream("console", logger::severity::debug)->build();
 
     auto* db = new database(logger);
-    delete db;
 
+
+    try{
+        db->add_pull("my pool", database::names_of_allocators::border_descriptor, 5000, database::allocation_mode::best);
+        cout << "add pull done" << endl;
+    }catch(const logic_error& ex){
+        cout << ex.what() << endl;
+    }
+
+    try{
+        db->add_scheme("my scheme", "my pool");
+        cout << "add scheme done" << endl;
+    }catch(const logic_error& ex){
+        cout << ex.what() << endl;
+    }
+
+    try{
+        db->add_collection("MY COLLECTION", "my pool", "my scheme", database::names_of_containers::avl_tree);
+        cout << "add collection done" << endl;
+    }catch(const logic_error& ex){
+        cout << ex.what() << endl;
+    }
+
+
+
+    database::pipeline_key k = {44, "version 44.02"};
+    database::pipeline_commit_info i = {
+            "4q5hgwrthwrth",
+            "eflerrr",
+            "yanchello@mail.ru"
+
+    };
+    database::pipeline_value v = {
+            i,
+            "R//some_path",
+            "LISABETH",
+            "wrong name!",
+            "wrong code!",
+            "WRONG AUTOMOBILE!",
+            "R//directory_wow"
+
+    };
+
+    try{
+        db->insert(k, v, "my pool", "my scheme", "MY COLLECTION");
+        cout << "insert done" << endl;
+    }catch(const logic_error& ex){
+        cout << ex.what() << endl;
+    }
+
+
+
+    database::pipeline_key k2 = {58, "version 58.01"};
+    database::pipeline_commit_info i2 = {
+            "2__adfgahdfgdfga",
+            "2__eflerrr",
+            "2__yanchello@mail.ru"
+
+    };
+    database::pipeline_value v2 = {
+            i2,
+            "2__R//some_path",
+            "2__LISABETH",
+            "2__wrong name!",
+            "2__wrong code!",
+            "2__WRONG AUTOMOBILE!",
+            "2__R//directory_wow"
+
+    };
+
+    try{
+        db->insert(k2, v2, "my pool", "my scheme", "MY COLLECTION");
+        cout << "insert done" << endl;
+    }catch(const logic_error& ex){
+        cout << ex.what() << endl;
+    }
+
+
+    database::pipeline_value v3;
+
+    try{
+        db->read_key(k, v3, "my pool", "my scheme", "MY COLLECTION");
+        cout << "read key done" << endl;
+    }catch(const logic_error& ex){
+        cout << ex.what() << endl;
+    }
+
+    cout << v3.commit_info.developer_login << " " << v3.commit_info.developer_email << " " << v3.assembly_artifacts_dir << endl;
+
+
+    try{
+        db->update_key(k, v2, "my pool", "my scheme", "MY COLLECTION");
+        cout << "update key done" << endl;
+    }catch(const logic_error& ex){
+        cout << ex.what() << endl;
+    }
+
+    try{
+        db->read_key(k, v3, "my pool", "my scheme", "MY COLLECTION");
+        cout << "read key done" << endl;
+    }catch(const logic_error& ex){
+        cout << ex.what() << endl;
+    }
+
+    cout << v3.commit_info.developer_login << " " << v3.commit_info.developer_email << " " << v3.assembly_artifacts_dir << endl;
+
+
+    try{
+        db->remove(k, "my pool", "my scheme", "MY COLLECTION");
+        cout << "remove done" << endl;
+    }catch(const logic_error& ex){
+        cout << ex.what() << endl;
+    }
+
+
+    try{
+        db->read_key(k, v3, "my pool", "my scheme", "MY COLLECTION");
+        cout << "read key done" << endl;
+    }catch(const logic_error& ex){
+        cout << ex.what() << endl;
+    }
+
+
+    try{
+        db->delete_collection("MY COLLECTION", "my pool", "my scheme");
+        cout << "delete collection done" << endl;
+    }catch(const logic_error& ex){
+        cout << ex.what() << endl;
+    }
+
+
+
+    delete db;
     delete logger;
     delete builder;
 }
