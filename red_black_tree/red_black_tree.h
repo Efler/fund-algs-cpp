@@ -530,9 +530,10 @@ private:
 
 private:
 
-    void debug_tree_printing_function(typename binary_search_tree<tkey, tvalue, tkey_comparer>::node* root) const override {
-        debug_rb_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(root));
-    }
+            ////TODO: CLOSED DUE TO COURSEWORK
+//    void debug_tree_printing_function(typename binary_search_tree<tkey, tvalue, tkey_comparer>::node* root) const override {
+//        debug_rb_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(root));
+//    }
 
     ///*-------------------- ADDITIONAL FUNCTIONS FIELD --------------------*///
 

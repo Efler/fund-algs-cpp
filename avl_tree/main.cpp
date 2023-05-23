@@ -24,6 +24,15 @@ int main(){
     associative_container<int, string>* avl = new avl_tree<int, string, my_int_comparer>(allocator, logger1);
 //    auto* avl = new avl_tree<int, string, my_int_comparer>(allocator, logger1);
 
+//------------------------------------
+//debug
+//
+//    avl->insert(1, "cute");
+//    avl->insert(2, "wow");
+//    avl->remove(1);
+//    string i = avl->get(2);
+//    cout << i << endl;
+
 //-------------------------------------
 //stress test
 

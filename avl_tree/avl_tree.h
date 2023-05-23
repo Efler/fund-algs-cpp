@@ -180,6 +180,10 @@ private:
         }
 
         void remove_balance(stack<avl_node*>* _remove_path, avl_node** avl_root, logger* logger){
+            if(_remove_path->empty()){
+                if(*avl_root != nullptr) height_update(*avl_root);
+                return;
+            }
             avl_node* target = _remove_path->top();
             _remove_path->pop();
 
@@ -258,9 +262,10 @@ private:
 
 private:
 
-    void debug_tree_printing_function(typename binary_search_tree<tkey, tvalue, tkey_comparer>::node* root) const override {
-        debug_avl_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(root));
-    }
+                    ////TODO: CLOSED DUE TO COURSEWORK
+//    void debug_tree_printing_function(typename binary_search_tree<tkey, tvalue, tkey_comparer>::node* root) const override {
+//        debug_avl_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(root));
+//    }
 
     ///*-------------------- ADDITIONAL FUNCTIONS FIELD --------------------*///
 

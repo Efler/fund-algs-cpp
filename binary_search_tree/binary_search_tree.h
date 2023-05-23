@@ -665,53 +665,56 @@ public:
 
     ///*-------------------- TREE DEBUG_PRINTING FIELD --------------------*///
 
-protected:
-
-    virtual void debug_tree_printing_function(node* root) const {
-        debug_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(root));
-    }
+//protected:        TODO: CLOSED DUE TO COURSEWORK!
+//
+//    virtual void debug_tree_printing_function(node* root) const {
+//        debug_tree_printing<tkey, tvalue>(reinterpret_cast<void*>(root));
+//    }
 
     ///*-------------------- BYPASS FIELD --------------------*///
 
-public:
+//public:        TODO: CLOSED DUE TO COURSEWORK!
+//
+//    void bypass(typename associative_container<tkey,tvalue>::bypass_mode mode) const override {
+//        string msg;
+//        switch(mode){
+//            case associative_container<tkey,tvalue>::bypass_mode::prefix:
+//                for (auto begin = begin_pref(); begin != end_pref(); ++begin){
+//                    msg += make_string(std::get<0>(*begin));
+//                    msg += " : ";
+//                    msg += make_string(std::get<1>(*begin));
+//                    msg += "   ";
+//                }
+//                if(_logger != nullptr) _logger->log(msg, logger::severity::debug);
+//                debug_tree_printing_function(_root);
+//                break;
+//            case associative_container<tkey,tvalue>::bypass_mode::infix:
+//                for (auto begin = begin_inf(); begin != end_inf(); ++begin){
+//                    msg += make_string(std::get<0>(*begin));
+//                    msg += " : ";
+//                    msg += make_string(std::get<1>(*begin));
+//                    msg += "   ";
+//                }
+//                if(_logger != nullptr) _logger->log(msg, logger::severity::debug);
+//                debug_tree_printing_function(_root);
+//                break;
+//            case associative_container<tkey,tvalue>::bypass_mode::postfix:
+//                for (auto begin = begin_postf(); begin != end_postf(); ++begin){
+//                    msg += make_string(std::get<0>(*begin));
+//                    msg += " : ";
+//                    msg += make_string(std::get<1>(*begin));
+//                    msg += "   ";
+//                }
+//                if(_logger != nullptr) _logger->log(msg, logger::severity::debug);
+//                debug_tree_printing_function(_root);
+//                break;
+//            default:
+//                return;
+//        }
+//    }
 
-    void bypass(typename associative_container<tkey,tvalue>::bypass_mode mode) const override {
-        string msg;
-        switch(mode){
-            case associative_container<tkey,tvalue>::bypass_mode::prefix:
-                for (auto begin = begin_pref(); begin != end_pref(); ++begin){
-                    msg += make_string(std::get<0>(*begin));
-                    msg += " : ";
-                    msg += make_string(std::get<1>(*begin));
-                    msg += "   ";
-                }
-                if(_logger != nullptr) _logger->log(msg, logger::severity::debug);
-                debug_tree_printing_function(_root);
-                break;
-            case associative_container<tkey,tvalue>::bypass_mode::infix:
-                for (auto begin = begin_inf(); begin != end_inf(); ++begin){
-                    msg += make_string(std::get<0>(*begin));
-                    msg += " : ";
-                    msg += make_string(std::get<1>(*begin));
-                    msg += "   ";
-                }
-                if(_logger != nullptr) _logger->log(msg, logger::severity::debug);
-                debug_tree_printing_function(_root);
-                break;
-            case associative_container<tkey,tvalue>::bypass_mode::postfix:
-                for (auto begin = begin_postf(); begin != end_postf(); ++begin){
-                    msg += make_string(std::get<0>(*begin));
-                    msg += " : ";
-                    msg += make_string(std::get<1>(*begin));
-                    msg += "   ";
-                }
-                if(_logger != nullptr) _logger->log(msg, logger::severity::debug);
-                debug_tree_printing_function(_root);
-                break;
-            default:
-                return;
-        }
-    }
+                ////TODO: CLOSED DUE TO COURSEWORK!
+    void bypass(typename associative_container<tkey,tvalue>::bypass_mode mode) const override{}
 
     ///*-------------------- BINARY_SEARCH_TREE CLASS FIELDS --------------------*///
 
