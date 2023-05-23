@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[]){
     auto* builder = new logger_builder();
-    logger* logger = builder->add_stream("console", logger::severity::debug)->build();
+    logger* logger = builder->add_stream("console", logger::severity::warning)->build();
 
     auto* db = new database(logger);
 

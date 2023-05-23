@@ -151,7 +151,7 @@ public:
                                       string_comparer>(_database_allocator, _logger);
 
         _pool_allocators = new red_black_tree<string, abstract_allocator*, string_comparer>(_database_allocator, _logger);
-        _logger->log("--- DATABASE CREATED! ---", logger::severity::information);
+        _logger->log("--- DATABASE CREATED! ---", logger::severity::warning);
     }
 
     database(const database& other) = delete;
@@ -176,7 +176,7 @@ public:
         delete _database;
         delete _database_allocator;
 
-        _logger->log("--- DATABASE DELETED! ---", logger::severity::information);
+        _logger->log("--- DATABASE DELETED! ---", logger::severity::warning);
     }
 
     ////* ------------------------------ RUN_FILE_COMMANDS FIELD ------------------------------ *////
@@ -330,7 +330,12 @@ private:
 
             try{insert(k, v, pool_name, scheme_name, collection_name);} catch(const logic_error& ex) {throw logic_error(ex.what());}
 
-            _logger->log(">> Insert DONE!", logger::severity::information);
+            string msg = ">> Insert DONE! ( key[id: ";
+            msg += to_string(k.id);
+            msg += ", build version: ";
+            msg += k.build_version;
+            msg += "] )";
+            _logger->log(msg, logger::severity::warning);
 
         }
         else if(command.find("read key: ") == 0){
@@ -355,7 +360,7 @@ private:
             msg += k.build_version;
             msg += "]";
             msg += from_value_to_output_string(v);
-            _logger->log(msg, logger::severity::information);
+            _logger->log(msg, logger::severity::warning);
 
         }
         else if(command.find("update key: ") == 0){
@@ -376,7 +381,12 @@ private:
 
             try{update_key(k, v, pool_name, scheme_name, collection_name);} catch(const logic_error& ex) {throw logic_error(ex.what());}
 
-            _logger->log(">> Update key DONE!", logger::severity::information);
+            string msg = ">> Update key DONE! ( key[id: ";
+            msg += to_string(k.id);
+            msg += ", build version: ";
+            msg += k.build_version;
+            msg += "] )";
+            _logger->log(msg, logger::severity::warning);
 
         }
         else if(command.find("remove: ") == 0){
@@ -394,7 +404,12 @@ private:
 
             try{remove(k, pool_name, scheme_name, collection_name);} catch(const logic_error& ex) {throw logic_error(ex.what());}
 
-            _logger->log(">> Remove DONE!", logger::severity::information);
+            string msg = ">> Remove DONE! ( key[id: ";
+            msg += to_string(k.id);
+            msg += ", build version: ";
+            msg += k.build_version;
+            msg += "] )";
+            _logger->log(msg, logger::severity::warning);
         }
         else if(command.find("add pool: ") == 0){
             command_str = command.substr(10);
@@ -459,7 +474,7 @@ private:
             string msg = ">> Add pool '";
             msg += pool_name;
             msg += "' DONE!";
-            _logger->log(msg, logger::severity::information);
+            _logger->log(msg, logger::severity::warning);
         }
         else if(command.find("delete pool: ") == 0){
             command_str = command.substr(13);
@@ -478,7 +493,7 @@ private:
             string msg = ">> Delete pool '";
             msg += pool_name;
             msg += "' DONE!";
-            _logger->log(msg, logger::severity::information);
+            _logger->log(msg, logger::severity::warning);
         }
         else if(command.find("add scheme: ") == 0){
             command_str = command.substr(12);
@@ -502,7 +517,7 @@ private:
             msg += "' (pool: '";
             msg += pool_name;
             msg += "') DONE!";
-            _logger->log(msg, logger::severity::information);
+            _logger->log(msg, logger::severity::warning);
         }
         else if(command.find("delete scheme: ") == 0){
             command_str = command.substr(15);
@@ -526,7 +541,7 @@ private:
             msg += "' (pool: '";
             msg += pool_name;
             msg += "') DONE!";
-            _logger->log(msg, logger::severity::information);
+            _logger->log(msg, logger::severity::warning);
         }
         else if(command.find("add collection: ") == 0){
             command_str = command.substr(16);
@@ -559,7 +574,7 @@ private:
             msg += "', scheme: '";
             msg += scheme_name;
             msg += "') DONE!";
-            _logger->log(msg, logger::severity::information);
+            _logger->log(msg, logger::severity::warning);
         }
         else if(command.find("delete collection: ") == 0){
             command_str = command.substr(19);
@@ -579,7 +594,7 @@ private:
             msg += "', scheme: '";
             msg += scheme_name;
             msg += "') DONE!";
-            _logger->log(msg, logger::severity::information);
+            _logger->log(msg, logger::severity::warning);
         }
         else if(command.find("read range: ") == 0){
             ////TODO: READ RANGE!!
@@ -587,9 +602,25 @@ private:
         else throw logic_error("Error: invalid command/format!");
     }
 
+    string name_of_file(const string& path){
+        size_t tmp = path.find('\\');
+        size_t tmp2;
+        do{
+            tmp2 = tmp;
+            tmp = path.find('\\', tmp2 + 1);
+        }while(tmp != string::npos);
+        string name = path.substr(tmp2 + 1);
+        return name;
+    }
+
 public:
 
     void run_file_commands(const string& path){
+        string msg = "===>> PARSING ";
+        msg += name_of_file(path);
+        msg += " ...";
+        _logger->log(msg, logger::severity::warning);
+
         ifstream fin;
         fin.open(path);
         if(!fin.is_open()){
@@ -635,7 +666,7 @@ public:
             }
         }
         fin.close();
-        _logger->log("==>> PARSING DONE!", logger::severity::information);
+        _logger->log("===>> PARSING DONE!", logger::severity::warning);
     }
 
     ////* ------------------------------ DIALOG FIELD ------------------------------ *////
