@@ -1,1 +1,32 @@
 i don't know what i'm doing
+
+
+COMMANDS:
+
+insert: [pool_name] [scheme_name] [collection_name]
+key: [id] [build_version]
+value: [hash] [developer_login] [developer_email] [assembly_script_path] [assembly_name] [build_errors] [static_code_analysis_errors] [autotest_run_errors] [assembly_artifacts_dir]
+
+read key: [pool_name] [scheme_name] [collection_name]
+key: [id] [build_version]
+
+update key: [pool_name] [scheme_name] [collection_name]
+key: [id] [build_version]
+value: [hash] [developer_login] [developer_email] [assembly_script_path] [assembly_name] [build_errors] [static_code_analysis_errors] [autotest_run_errors] [assembly_artifacts_dir]
+
+remove: [pool_name] [scheme_name] [collection_name]
+key: [id] [build_version]
+
+add pool: [pool_name] { [alloc_name] [size] [alloc_mode(only if exists)] }
+
+delete pool: [pool_name]
+
+add scheme: [pool_name] [scheme_name]
+
+delete scheme: [pool_name] [scheme_name]
+
+add collection: [pool_name] [scheme_name] [collection_name] {tree_name}
+
+delete collection: [pool_name] [scheme_name] [collection_name]
+
+TODO: READ RANGE!!
