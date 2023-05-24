@@ -1,5 +1,6 @@
 #ifndef COURSEWORK_DATABASE_H
 #define COURSEWORK_DATABASE_H
+#include <queue>
 #include "../red_black_tree/red_black_tree.h"
 #include "../allocator_1/allocator_1.h"
 #include "../allocator_2/allocator_2.h"
@@ -8,10 +9,10 @@
 #include "../avl_tree/avl_tree.h"
 
 
-////TODO: 1. READ RANGE
-////      2. DIALOG
-////      3. MAKE README
-////      4. ENABLE/DISABLE TREE LOGGING
+////TODO: 1. DIALOG
+////      2. MAKE README
+////      3. ENABLE/DISABLE ALLOCATOR'S LOGGING
+////      4. ADD CLEAR METHOD
 
 
 class database final{
@@ -179,7 +180,7 @@ public:
         _logger->log("--- DATABASE DELETED! ---", logger::severity::warning);
     }
 
-    ////* ------------------------------ RUN_FILE_COMMANDS FIELD ------------------------------ *////
+    ////* ------------------------------ PARSING / RUN_FILE FIELD ------------------------------ *////
 
 private:
 
@@ -289,6 +290,19 @@ private:
         result += "\n[Assembly artifacts directory]: ";
         result += v.assembly_artifacts_dir;
         result += "\n";
+        return result;
+    }
+
+    string printing_key_value(const pair<pipeline_key, pipeline_value>& kv_pair){
+        pipeline_key k = get<0>(kv_pair);
+        pipeline_value v = get<1>(kv_pair);
+        string result = "\n-- key [id: ";
+        result += to_string(k.id);
+        result += ", build version: ";
+        result += k.build_version;
+        result += "] --\n";
+
+        result += from_value_to_output_string(v);
         return result;
     }
 
@@ -597,7 +611,96 @@ private:
             _logger->log(msg, logger::severity::warning);
         }
         else if(command.find("read range: ") == 0){
-            ////TODO: READ RANGE!!
+            command_str = command.substr(12);
+            size_t tmp3;
+
+            string pool_name;
+            string scheme_name;
+            string collection_name;
+            string key_str;
+            pipeline_key k_min;
+            pipeline_key k_max;
+            pipeline_key* k_min_pointer = nullptr;
+            pipeline_key* k_max_pointer = nullptr;
+            pipeline_key_comparer comparer;
+            queue<pair<pipeline_key, pipeline_value>> results;
+
+            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+
+            if(key.find("keys: ") != 0) throw logic_error("Error: wrong format of a key string");
+            key_str = key.substr(6);
+
+            tmp1 = key_str.find('[');
+            if(tmp1 != 0) throw logic_error("Error: wrong format of a key string");
+            tmp2 = key_str.find("] ");
+            if(tmp2 == string::npos) throw logic_error("Error: wrong format of a key string");
+            if(tmp2 == 1){
+                key_str = key_str.substr(3);
+            }else{
+                tmp3 = key_str.find(", ");
+                if(tmp3 == string::npos || (tmp3 > tmp2)) throw logic_error("Error: wrong format of a key string");
+                string id_str = key_str.substr(1, tmp3 - 1);
+                if(id_str.empty()) throw logic_error("Error: invalid id (read key min)");
+                for(char c : id_str) if(!isdigit(c)) throw logic_error("Error: invalid id (read key min)");
+                int id = stoi(id_str);
+
+                string build_version_str = key_str.substr(tmp3 + 2, tmp2 - tmp3 - 2);
+                if(build_version_str.empty()) throw logic_error("Error: invalid build version (read key min)");
+                key_str = key_str.substr(tmp2 + 2);
+
+                k_min = { id, build_version_str };
+                k_min_pointer = &k_min;
+            }
+
+            tmp1 = key_str.find('[');
+            if(tmp1 != 0) throw logic_error("Error: wrong format of a key string");
+            tmp2 = key_str.find(']');
+            if(tmp2 == string::npos) throw logic_error("Error: wrong format of a key string");
+            if(tmp2 != 1){
+                tmp3 = key_str.find(", ");
+                if(tmp3 == string::npos || (tmp3 > tmp2)) throw logic_error("Error: wrong format of a key string");
+                string id_str = key_str.substr(1, tmp3 - 1);
+                if(id_str.empty()) throw logic_error("Error: invalid id (read key max)");
+                for(char c : id_str) if(!isdigit(c)) throw logic_error("Error: invalid id (read key max)");
+                int id = stoi(id_str);
+
+                string build_version_str = key_str.substr(tmp3 + 2, tmp2 - tmp3 - 2);
+                if(build_version_str.empty()) throw logic_error("Error: invalid build version (read key max)");
+
+                k_max = { id, build_version_str };
+                k_max_pointer = &k_max;
+            }
+
+            if(comparer(k_min, k_max) > 0) throw logic_error("Error: minimum bound is bigger than maximum bound!");
+
+            try{ read_range(results, pool_name, scheme_name, collection_name, k_min_pointer, k_max_pointer); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+
+            string msg = "\n\n>> Reading range from ";
+            if(k_min_pointer == nullptr) msg += "Begin to ";
+            else{
+                msg += "[id: ";
+                msg += to_string(k_min.id);
+                msg += ", build version: ";
+                msg += k_min.build_version;
+                msg += "] to ";
+            }
+            if(k_max_pointer == nullptr) msg += "End";
+            else{
+                msg += "[id: ";
+                msg += to_string(k_max.id);
+                msg += ", build version: ";
+                msg += k_max.build_version;
+                msg += "]\n";
+            }
+            if(results.empty()) msg += "\nNo data found\n";
+            else{
+                while(!results.empty()){
+                    msg += printing_key_value(results.front());
+                    results.pop();
+                }
+            }
+            _logger->log(msg, logger::severity::warning);
+
         }
         else throw logic_error("Error: invalid command/format!");
     }
@@ -632,8 +735,6 @@ public:
         string line3;
         while(getline(fin, line)){
 
-                        ////TODO: READ RANGE !!!!
-
             if(line.find("insert: ") == 0 || line.find("update key: ") == 0){
                 if(!getline(fin, line2)){
                     fin.close();
@@ -643,7 +744,7 @@ public:
                     fin.close();
                     throw logic_error("Error: wrong format of a command string (no value)");
                 }
-            }else if(line.find("read key: ") == 0 || line.find("remove: ") == 0){
+            }else if(line.find("read key: ") == 0 || line.find("remove: ") == 0 || line.find("read range: ") == 0){
                 if(!getline(fin, line2)){
                     fin.close();
                     throw logic_error("Error: wrong format of a command string (no key)");
@@ -764,8 +865,44 @@ private:
         _logger->log("(read key complete)", logger::severity::information);
     }
 
-    void read_range(const pipeline_key& a, const pipeline_key& b, vector<pipeline_value>& values){
-        ////TODO: !!
+    void read_range(queue<pair<pipeline_key, pipeline_value>>& results, const string& pool_name, const string& scheme_name, const string& collection_name, const pipeline_key* a, const pipeline_key* b){
+        red_black_tree<string, red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>*, string_comparer>* pool;
+        red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* scheme;
+        associative_container<pipeline_key, pipeline_value>* collection;
+
+        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{ scheme = get_scheme(scheme_name, pool); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{ collection = get_collection(collection_name, scheme); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+
+        auto* collection_casted = dynamic_cast<binary_search_tree<pipeline_key, pipeline_value, pipeline_key_comparer>*>(collection);
+        if(collection_casted == nullptr) throw logic_error("Error: undefined tree type of collection!");
+        auto iter = collection_casted->begin_inf();
+        auto end_iter = collection_casted->end_inf();
+        pipeline_key_comparer comparer;
+        bool min_found = true;
+
+        if(a != nullptr){
+            while(iter != end_iter && comparer(get<0>(*iter), *a) != 0) {
+                ++iter;
+            }
+            if(iter == end_iter) min_found = false;
+        }
+
+        if(min_found){
+            if(b != nullptr){
+                while(iter != end_iter && comparer(get<0>(*iter), *b) != 0){
+                    results.emplace(get<0>(*iter), get<1>(*iter));
+                    ++iter;
+                }
+                if(iter != end_iter) results.emplace(get<0>(*iter), get<1>(*iter));
+            }else{
+                for(; iter != end_iter; ++iter){
+                    results.emplace(get<0>(*iter), get<1>(*iter));
+                }
+            }
+        }
+
+        _logger->log("(read range complete)", logger::severity::information);
     }
 
     void update_key(const pipeline_key& key, const pipeline_value& value, const string& pool_name, const string& scheme_name, const string& collection_name){

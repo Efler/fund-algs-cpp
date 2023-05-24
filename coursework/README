@@ -10,6 +10,9 @@ value: [hash] [developer_login] [developer_email] [assembly_script_path] [assemb
 read key: [pool_name] [scheme_name] [collection_name]
 key: [id] [build_version]
 
+read range: [pool_name] [scheme_name] [collection_name]
+keys: [id, build_version](optional) [id, build_version](optional)
+
 update key: [pool_name] [scheme_name] [collection_name]
 key: [id] [build_version]
 value: [hash] [developer_login] [developer_email] [assembly_script_path] [assembly_name] [build_errors] [static_code_analysis_errors] [autotest_run_errors] [assembly_artifacts_dir]
@@ -28,5 +31,3 @@ delete scheme: [pool_name] [scheme_name]
 add collection: [pool_name] [scheme_name] [collection_name] {tree_name}
 
 delete collection: [pool_name] [scheme_name] [collection_name]
-
-TODO: READ RANGE!!
