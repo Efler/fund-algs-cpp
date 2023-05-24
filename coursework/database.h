@@ -9,10 +9,9 @@
 #include "../avl_tree/avl_tree.h"
 
 
-////TODO: 1. DIALOG
-////      2. MAKE README
-////      3. ENABLE/DISABLE ALLOCATOR'S LOGGING
-////      4. ADD CLEAR METHOD
+////TODO: 1. MAKE README / done_tasks
+////      2. ENABLE/DISABLE ALLOCATOR'S LOGGING
+////      3. ALLOC NAME GLOBAL_HEAP, COMMAND: ADD POOL
 
 
 class database final{
@@ -166,12 +165,7 @@ public:
 
     ~database(){
 
-        auto iter = _database->begin_postf();
-        auto end_iter = _database->end_postf();
-        for(; iter != end_iter; ++iter){
-            auto pool_name = get<0>(*iter);
-            delete_pool(pool_name);
-        }
+        reset_database();
 
         delete _pool_allocators;
         delete _database;
@@ -671,7 +665,7 @@ private:
                 k_max_pointer = &k_max;
             }
 
-            if(comparer(k_min, k_max) > 0) throw logic_error("Error: minimum bound is bigger than maximum bound!");
+            if(k_min_pointer != nullptr && k_max_pointer != nullptr && comparer(k_min, k_max) > 0) throw logic_error("Error: minimum bound is bigger than maximum bound!");
 
             try{ read_range(results, pool_name, scheme_name, collection_name, k_min_pointer, k_max_pointer); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
 
@@ -700,6 +694,11 @@ private:
                 }
             }
             _logger->log(msg, logger::severity::warning);
+
+        }
+        else if(command.find("reset database:") == 0){
+            reset_database();
+            _logger->log("--- RESET DATABASE! ---", logger::severity::warning);
 
         }
         else throw logic_error("Error: invalid command/format!");
@@ -749,7 +748,7 @@ public:
                     fin.close();
                     throw logic_error("Error: wrong format of a command string (no key)");
                 }
-            }else if(line.find("add pool: ") == 0 || line.find("delete pool: ") == 0 || line.find("add scheme: ") == 0 || line.find("delete scheme: ") == 0 || line.find("add collection: ") == 0 || line.find("delete collection: ") == 0){
+            }else if(line.find("add pool: ") == 0 || line.find("delete pool: ") == 0 || line.find("add scheme: ") == 0 || line.find("delete scheme: ") == 0 || line.find("add collection: ") == 0 || line.find("delete collection: ") == 0 || line.find("reset database:") == 0){
                 try{ parsing_command(line, line2, line3); } catch(const logic_error& ex){
                     fin.close();
                     throw logic_error(ex.what());
@@ -775,7 +774,156 @@ public:
 public:
 
     void start_dialog(){
-        ////TODO: !!
+        _logger->log("\n\n###### Dialog started! ######\n(?) Note: Check out README file for command's format before using. Thank you!\n", logger::severity::warning);
+        string action;
+        string input;
+
+        while(action != "4"){
+            _logger->log("\n#################################################\n\n#### Choose an action ####\n\n1) Run commands in a file\n2) Enter a command manually\n3) Reset database\n4) Exit\n\n###> Input:", logger::severity::warning);
+            cin.clear();
+            getline(cin, action);
+
+            if(action == "1"){
+
+                _logger->log("\n#################################################\n\n#### Enter a file's path ####\n\n###> Path:", logger::severity::warning);
+                cin.clear();
+                getline(cin, input);
+                if(input.empty()){
+                    _logger->log("\n\nError: empty path, returning...\n", logger::severity::warning);
+                    continue;
+                }
+                try{
+                    run_file_commands(input);
+                    _logger->log("\n#################################################\n\n#### Parsing commands finished successfully! ####\n\n1) Continue\n2) Exit\n\n###> Input:", logger::severity::warning);
+                    string tmp_action;
+                    cin.clear();
+                    getline(cin, tmp_action);
+                    if(tmp_action == "1"){
+                        continue;
+                    }else if(tmp_action == "2"){
+                        _logger->log("\n#################################################\n\n#### Exiting... ####\n", logger::severity::warning);
+                        break;
+                    }else{
+                        _logger->log("\n\nError: undefined action, choosing 'continue' for safety...\n", logger::severity::warning);
+                        continue;
+                    }
+                }catch(const logic_error& ex){
+                    string tmp_action;
+                    string msg = "\n\n";
+                    msg += ex.what();
+                    msg += "\n";
+                    _logger->log(msg, logger::severity::warning);
+                    _logger->log("\n#################################################\n\n#### Parsing commands failed! ####\n\n1) Continue\n2) Reset and continue\n3) Exit\n\n###> Input:", logger::severity::warning);
+                    cin.clear();
+                    getline(cin, tmp_action);
+                    if(tmp_action == "1") {
+                        continue;
+                    }else if(tmp_action == "2"){
+                        _logger->log("\n#################################################\n\n#### Continuing, Resetting... ####\n", logger::severity::warning);
+                        reset_database();
+                        continue;
+                    }else if(tmp_action == "3"){
+                        _logger->log("\n#################################################\n\n#### Exiting... ####\n", logger::severity::warning);
+                        break;
+                    }else{
+                        _logger->log("\nError: undefined action, choosing 'continue' for safety...\n", logger::severity::warning);
+                        continue;
+                    }
+                }
+
+            }else if(action == "2"){
+                string command_action;
+
+                string command_line;
+                string key_line;
+                string value_line;
+
+                _logger->log("\n#################################################\n\n#### Choose a command ####\n\n1) insert\n2) read key\n3) read range\n4) update key\n5) remove\n6) add pool\n7) delete pool\n8) add scheme\n9) delete scheme\n10) add collection\n11) delete collection\n\n###> Command:", logger::severity::warning);
+                cin.clear();
+                getline(cin, command_action);
+
+                if(command_action == "1" || command_action == "2" || command_action == "3" || command_action == "4" || command_action == "5" || command_action == "6" || command_action == "7" || command_action == "8" || command_action == "9" || command_action == "10" || command_action == "11"){
+                    if(command_action == "1"){
+                        _logger->log("\n#################################################\n\n(?) Note: insert format:\ninsert: [pool_name] [scheme_name] [collection_name]\nkey: [id] [build_version]\nvalue: [hash] [developer_login] [developer_email] [assembly_script_path] [assembly_name] [build_errors] [static_code_analysis_errors] [autotest_run_errors] [assembly_artifacts_dir]\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                    }else if(command_action == "2"){
+                        _logger->log("\n#################################################\n\n(?) Note: read key format:\nread key: [pool_name] [scheme_name] [collection_name]\nkey: [id] [build_version]\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                    }else if(command_action == "3"){
+                        _logger->log("\n#################################################\n\n(?) Note: read range format:\nread range: [pool_name] [scheme_name] [collection_name]\nkeys: [id, build_version](optional) [id, build_version](optional)\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                    }else if(command_action == "4"){
+                        _logger->log("\n#################################################\n\n(?) Note: update key format:\nupdate key: [pool_name] [scheme_name] [collection_name]\nkey: [id] [build_version]\nvalue: [hash] [developer_login] [developer_email] [assembly_script_path] [assembly_name] [build_errors] [static_code_analysis_errors] [autotest_run_errors] [assembly_artifacts_dir]\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                    }else if(command_action == "5"){
+                        _logger->log("\n#################################################\n\n(?) Note: remove format:\nremove: [pool_name] [scheme_name] [collection_name]\nkey: [id] [build_version]\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                    }else if(command_action == "6"){
+                        _logger->log("\n#################################################\n\n(?) Note: add pool format:\nadd pool: [pool_name] { [alloc_name] [size] [alloc_mode(only if exists)] }\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                    }else if(command_action == "7"){
+                        _logger->log("\n#################################################\n\n(?) Note: delete pool format:\ndelete pool: [pool_name]\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                    }else if(command_action == "8"){
+                        _logger->log("\n#################################################\n\n(?) Note: add scheme format:\nadd scheme: [pool_name] [scheme_name]\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                    }else if(command_action == "9"){
+                        _logger->log("\n#################################################\n\n(?) Note: delete scheme format:\ndelete scheme: [pool_name] [scheme_name]\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                    }else if(command_action == "10"){
+                        _logger->log("\n#################################################\n\n(?) Note: add collection format:\nadd collection: [pool_name] [scheme_name] [collection_name] {tree_name}\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                    }else{
+                        _logger->log("\n#################################################\n\n(?) Note: delete collection format:\ndelete collection: [pool_name] [scheme_name] [collection_name]\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                    }
+                    cin.clear();
+                    getline(cin, command_line);
+
+                    if(command_action == "1" || command_action == "4"){
+                        _logger->log("\n\n#### Enter a key line ####\n\n###> Key line:", logger::severity::warning);
+                        cin.clear();
+                        getline(cin, key_line);
+                        _logger->log("\n\n#### Enter a value line ####\n\n###> Value line:", logger::severity::warning);
+                        cin.clear();
+                        getline(cin, value_line);
+                    }
+                    else if(command_action == "2" || command_action == "3" || command_action == "5"){
+                        _logger->log("\n\n#### Enter a key line ####\n\n###> Key line:", logger::severity::warning);
+                        cin.clear();
+                        getline(cin, key_line);
+                        value_line = "";
+                    }else{
+                        key_line = "";
+                        value_line = "";
+                    }
+
+                    try{
+                        parsing_command(command_line, key_line, value_line);
+                        _logger->log("\n#################################################\n\n#### Command execution finished successfully! ####\n\nReturning...\n", logger::severity::warning);
+                        continue;
+                    }catch(const logic_error& ex){
+                        string msg = "\n\n";
+                        msg += ex.what();
+                        msg += "\n";
+                        _logger->log(msg, logger::severity::warning);
+                        _logger->log("\n#################################################\n\n#### Command execution failed! ####\n\nReturning...\n", logger::severity::warning);
+                        continue;
+                    }
+                }else{
+                    _logger->log("\n\nError: undefined command, returning...\n", logger::severity::warning);
+                    continue;
+                }
+
+            }else if(action == "3"){
+
+                _logger->log("\n#################################################\n\n#### Resetting database... ####\n", logger::severity::warning);
+                reset_database();
+                continue;
+
+            }else if(action == "4"){
+
+                _logger->log("\n########################################\n\n#### Exiting... ####\n", logger::severity::warning);
+                break;
+
+            }else{
+
+                _logger->log("\n\nError: undefined action, exiting...\n", logger::severity::warning);
+                break;
+
+            }
+        }
+
+        _logger->log("\n###### Dialog closed! ######\n", logger::severity::warning);
     }
 
     ////* ------------------------------ COMMANDS FIELD ------------------------------ *////
@@ -1095,6 +1243,17 @@ private:
         scheme->remove(collection_name);
 
         _logger->log("(delete collection complete)", logger::severity::information);
+    }
+
+    void reset_database(){
+        auto iter = _database->begin_postf();
+        auto end_iter = _database->end_postf();
+        for(; iter != end_iter; ++iter){
+            auto pool_name = get<0>(*iter);
+            delete_pool(pool_name);
+        }
+
+        _logger->log("(reset complete)", logger::severity::information);
     }
 
 };

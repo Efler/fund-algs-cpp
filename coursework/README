@@ -31,3 +31,5 @@ delete scheme: [pool_name] [scheme_name]
 add collection: [pool_name] [scheme_name] [collection_name] {tree_name}
 
 delete collection: [pool_name] [scheme_name] [collection_name]
+
+reset database:

@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[]){
     auto* builder = new logger_builder();
-    logger* logger = builder->add_stream("console", logger::severity::warning)->build();
+    logger* logger = builder->add_stream("console", logger::severity::information)->build();
 
     auto* db = new database(logger);
 
@@ -40,7 +40,9 @@ int main(int argc, char* argv[]){
 //-----------------------------------
 //testing methods
 
-    try{ db->run_file_commands("D:\\JetBrains\\tester_files_(yan)\\coursework_commands.txt"); } catch(const logic_error& ex){ cout << ex.what() << endl; }
+//    try{ db->run_file_commands("D:\\JetBrains\\tester_files_(yan)\\coursework_commands.txt"); } catch(const logic_error& ex){ cout << ex.what() << endl; }
+
+    try{ db->start_dialog(); } catch(const logic_error& ex){ cout << ex.what() << endl; }
 
 
 //------------------------------------
