@@ -9,9 +9,8 @@
 #include "../avl_tree/avl_tree.h"
 
 
-////TODO: 1. MAKE README / done_tasks
-////      2. ENABLE/DISABLE ALLOCATOR'S LOGGING
-////      3. ALLOC NAME GLOBAL_HEAP, COMMAND: ADD POOL
+////TODO: 1. ENABLE/DISABLE ALLOCATOR'S LOGGING
+////      2. ALLOC NAME GLOBAL_HEAP, COMMAND: ADD POOL, fix readme
 
 
 class database final{
@@ -178,7 +177,7 @@ public:
 
 private:
 
-    pipeline_key parsing_key(const string& key){
+    static pipeline_key parsing_key(const string& key){
         string key_str;
         size_t tmp1;
         size_t tmp2;
@@ -207,7 +206,7 @@ private:
         return k;
     }
 
-    string parse_field(string& value_str, const string& name){
+    static string parse_field(string& value_str, const string& name){
         size_t tmp1;
         size_t tmp2;
 
@@ -225,7 +224,7 @@ private:
         return result;
     }
 
-    pipeline_value parsing_value(const string& value){
+    static pipeline_value parsing_value(const string& value){
         string value_str;
         size_t tmp1;
         size_t tmp2;
@@ -264,7 +263,7 @@ private:
         return v;
     }
 
-    string from_value_to_output_string(const pipeline_value& v){
+    static string from_value_to_output_string(const pipeline_value& v){
         string result = "\n[Pipeline commit information]:\n   [hash]: ";
         result += v.commit_info.hash;
         result += "\n   [developer login]: ";
@@ -287,7 +286,7 @@ private:
         return result;
     }
 
-    string printing_key_value(const pair<pipeline_key, pipeline_value>& kv_pair){
+    static string printing_key_value(const pair<pipeline_key, pipeline_value>& kv_pair){
         pipeline_key k = get<0>(kv_pair);
         pipeline_value v = get<1>(kv_pair);
         string result = "\n-- key [id: ";
@@ -300,7 +299,7 @@ private:
         return result;
     }
 
-    void parsing_pool_scheme_collection(string& pool_name, string& scheme_name, string& collection_name, string& command_str){
+    static void parsing_pool_scheme_collection(string& pool_name, string& scheme_name, string& collection_name, string& command_str){
         size_t tmp1;
         size_t tmp2;
 
@@ -686,7 +685,7 @@ private:
                 msg += k_max.build_version;
                 msg += "]\n";
             }
-            if(results.empty()) msg += "\nNo data found\n";
+            if(results.empty()) msg += "\n\nNo data found\n";
             else{
                 while(!results.empty()){
                     msg += printing_key_value(results.front());
@@ -704,7 +703,7 @@ private:
         else throw logic_error("Error: invalid command/format!");
     }
 
-    string name_of_file(const string& path){
+    static string name_of_file(const string& path){
         size_t tmp = path.find('\\');
         size_t tmp2;
         do{
@@ -943,7 +942,7 @@ private:
         return pool;
     }
 
-    red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* get_scheme(const string& scheme_name, const red_black_tree<string, red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>*, string_comparer>* pool){
+    static red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* get_scheme(const string& scheme_name, const red_black_tree<string, red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>*, string_comparer>* pool){
         red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* scheme;
         try{
             scheme = pool->get(scheme_name);
@@ -956,7 +955,7 @@ private:
         return scheme;
     }
 
-    associative_container<pipeline_key, pipeline_value>* get_collection(const string& collection_name, const red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* scheme){
+    static associative_container<pipeline_key, pipeline_value>* get_collection(const string& collection_name, const red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* scheme){
         associative_container<pipeline_key, pipeline_value>* collection;
         try{
             collection = scheme->get(collection_name);

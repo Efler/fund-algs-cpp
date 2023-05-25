@@ -6,9 +6,18 @@
 
 int main(int argc, char* argv[]){
     auto* builder = new logger_builder();
-    logger* logger = builder->add_stream("console", logger::severity::information)->build();
+    logger* logger = builder->add_stream("console", logger::severity::warning)->build();
 
     auto* db = new database(logger);
+
+
+//-----------------------------------
+//testing methods
+
+//    try{ db->run_file_commands("D:\\JetBrains\\tester_files_(yan)\\coursework_commands.txt"); } catch(const logic_error& ex){ cout << ex.what() << endl; }
+
+    try{ db->start_dialog(); } catch(const logic_error& ex){ cout << ex.what() << endl; }
+
 
 //------------------------------------
 //little tests
@@ -36,14 +45,6 @@ int main(int argc, char* argv[]){
 //    try{ db->read_key(k, v, "mypool", "my scheme", "Collection"); } catch(const logic_error& ex){ cout << ex.what() << endl; }
 //
 //    cout << v.commit_info.developer_login << " " << v.static_code_analysis_errors << " " << v.assembly_artifacts_dir << endl;
-
-//-----------------------------------
-//testing methods
-
-//    try{ db->run_file_commands("D:\\JetBrains\\tester_files_(yan)\\coursework_commands.txt"); } catch(const logic_error& ex){ cout << ex.what() << endl; }
-
-    try{ db->start_dialog(); } catch(const logic_error& ex){ cout << ex.what() << endl; }
-
 
 //------------------------------------
 //testing commands
@@ -175,8 +176,6 @@ int main(int argc, char* argv[]){
 //    }catch(const logic_error& ex){
 //        cout << ex.what() << endl;
 //    }
-
-
 
     delete db;
     delete logger;
