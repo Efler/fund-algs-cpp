@@ -329,7 +329,7 @@ public:
             string msg = "ALLOCATOR CREATED (MEMORY SIZE: ";
             msg += to_string((int)size);
             msg += " BYTES)";
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
     }
 
@@ -347,7 +347,7 @@ public:
 
         if(memory_logger() != nullptr){
             string msg = "ALLOCATOR DELETED";
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
         if(memory_allocator() == nullptr){
             ::operator delete(_memory);
@@ -374,7 +374,7 @@ public:
             if(dividable_size != 0){
                 dividable_size = dividable_size << 1;
                 power++;
-                if(power > 127) throw logic_error("Bad Alloc: size is too big!");
+                if(power > 127) throw logic_error("Bad Allocation: size is too big!");
             }
             else dividable_size++;
         }
@@ -389,7 +389,7 @@ public:
             p = next(p);
         }
 
-        if(p_best == nullptr) throw logic_error("Bad Alloc!!");
+        if(p_best == nullptr) throw logic_error("Bad Allocation!");
         p = p_best;
         size_t real_size = 0;
         size_t real_power = 0;
@@ -418,7 +418,7 @@ public:
             msg += to_string(power);
             msg += ", real power: ";
             msg += to_string(real_power);
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
 
         return result;
@@ -449,7 +449,7 @@ public:
             msg += to_string(dump_size);
             msg += ", dump: ";
             msg += memory_dump(target_to_dealloc, dump_size);
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
     }
 

@@ -7,7 +7,7 @@
 void testing_allocator(){
 
     unique_ptr<logger_builder> builder(new logger_builder());
-    builder->add_stream("console", logger::severity::debug);
+    builder->add_stream("console", logger::severity::trace);
 
     logger* logger = builder->build();
 

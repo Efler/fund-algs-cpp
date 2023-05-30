@@ -15,7 +15,7 @@ public:
 
     explicit allocator_1(const logger* l = nullptr):
         _logger(l){
-        if(_logger != nullptr) _logger->log("ALLOCATOR CREATED", logger::severity::debug);
+        if(_logger != nullptr) _logger->log("ALLOCATOR CREATED", logger::severity::trace);
     };
 
     allocator_1(const allocator_1& alloc) = delete;
@@ -27,7 +27,7 @@ public:
     allocator_1& operator=(allocator_1&& alloc) = delete;
 
     ~allocator_1() override {
-        if(_logger != nullptr) _logger->log("ALLOCATOR DELETED", logger::severity::debug);
+        if(_logger != nullptr) _logger->log("ALLOCATOR DELETED", logger::severity::trace);
     }
 
 private:
@@ -75,7 +75,7 @@ public:
             msg += address_to_hex(p);
             msg += ", size: ";
             msg += to_str(target_size);
-            _logger->log(msg, logger::severity::debug);
+            _logger->log(msg, logger::severity::trace);
         }
 
         return p;
@@ -92,7 +92,7 @@ public:
             msg += to_str(dump_size);
             msg += ", dump: ";
             msg += memory_dump(target_to_dealloc, dump_size);
-            _logger->log(msg, logger::severity::debug);
+            _logger->log(msg, logger::severity::trace);
         }
     }
 

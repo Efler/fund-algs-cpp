@@ -121,7 +121,7 @@ public:
             string msg = "ALLOCATOR CREATED (MEMORY SIZE: ";
             msg += to_string((int)size);
             msg += " BYTES)";
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
     }
 
@@ -153,14 +153,14 @@ public:
             string msg = "ALLOCATOR CREATED (MEMORY SIZE: ";
             msg += to_string((int)size);
             msg += " BYTES)";
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
     }
 
     ~allocator_2() override {
         if(memory_logger() != nullptr){
             string msg = "ALLOCATOR DELETED";
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
         if(memory_allocator() == nullptr){
             ::operator delete(_memory);
@@ -256,11 +256,7 @@ public:
         }
 
         if(flag == 0){
-            string msg;
-            msg += "size: ";
-            msg += to_string(target_size);
-            msg += ", Bad Allocation!!";
-            throw logic_error(msg);
+            throw logic_error("Bad Allocation!");
         }
 
         if(p_best != nullptr){
@@ -313,7 +309,7 @@ public:
             msg += address_to_hex(block_pool(p));
             msg += ", size: ";
             msg += to_string(target_size);
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
 
         return block_pool(p);
@@ -433,7 +429,7 @@ public:
             msg += to_string(dump_size);
             msg += ", dump: ";
             msg += memory_dump(target_to_dealloc, dump_size);
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
     }
 

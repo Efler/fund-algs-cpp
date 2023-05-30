@@ -167,14 +167,14 @@ public:
             string msg = "ALLOCATOR CREATED (MEMORY SIZE: ";
             msg += to_string((int)size);
             msg += " BYTES)";
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
     }
 
     ~allocator_3() override {
         if(memory_logger() != nullptr){
             string msg = "ALLOCATOR DELETED";
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
         if(memory_allocator() == nullptr){
             ::operator delete(_memory);
@@ -200,10 +200,7 @@ public:
 
         if(p == nullptr){
             if(target_size + 2 * sizeof(void*) + sizeof(size_t) > memory_size()){
-                string message = "size: ";
-                message += to_string(target_size);
-                message += ", Bad Allocation!!";
-                throw logic_error(message);
+                throw logic_error("Bad Allocation!");
             }
             p = reinterpret_cast<void**>(memory_size_pointer() + 1);
             *memory_first_block_pointer() = reinterpret_cast<void**>(p);
@@ -216,7 +213,7 @@ public:
                 msg += address_to_hex(block_pool(p));
                 msg += ", size: ";
                 msg += to_string(target_size);
-                memory_logger()->log(msg, logger::severity::debug);
+                memory_logger()->log(msg, logger::severity::trace);
             }
 
             return block_pool(p);
@@ -285,11 +282,7 @@ public:
             }
 
             if(flag == 0){
-                string msg;
-                msg += "size: ";
-                msg += to_string(target_size);
-                msg += ", Bad Allocation!!";
-                throw logic_error(msg);
+                throw logic_error("Bad Allocation!");
             }
 
             if(p_best != nullptr) p = p_best;
@@ -323,7 +316,7 @@ public:
                 msg += address_to_hex(block_pool(p_target));
                 msg += ", size: ";
                 msg += to_string(target_size);
-                memory_logger()->log(msg, logger::severity::debug);
+                memory_logger()->log(msg, logger::severity::trace);
             }
 
             return block_pool(p_target);
@@ -359,7 +352,7 @@ public:
             msg += to_string(dump_size);
             msg += ", dump: ";
             msg += memory_dump(target_to_dealloc, dump_size);
-            memory_logger()->log(msg, logger::severity::debug);
+            memory_logger()->log(msg, logger::severity::trace);
         }
     }
 

@@ -1,5 +1,6 @@
 # ninja log v5
-4	1598	7063042786846838	CMakeFiles/allocator_buddies.dir/main.cpp.obj	62f76f7ebc77fbb9
-1599	2197	7063042792827631	allocator_buddies.exe	d06d2431149edd6f
 4	1244	7063042957247861	CMakeFiles/allocator_buddies.dir/main.cpp.obj	62f76f7ebc77fbb9
 1245	1537	7063042959896500	allocator_buddies.exe	d06d2431149edd6f
+8	367	7067277054853236	build.ninja	9318fd3338f87acc
+4	1241	7067277068440814	CMakeFiles/allocator_buddies.dir/main.cpp.obj	62f76f7ebc77fbb9
+1242	1516	7067277071133906	allocator_buddies.exe	d06d2431149edd6f
