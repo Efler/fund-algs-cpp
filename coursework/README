@@ -91,12 +91,13 @@
 
     6. Add pool:
         Format {
-            add pool: [pool_name] { [alloc_name] [size] [alloc_mode(only if exists)] }
+            add pool: [pool_name] { [alloc_name] [size(only if needed)] [alloc_mode(only if exists)] }
 
             (?) Note: Pool_name - a string. Alloc_name - one of this names: global heap, sorted list,
-                border descriptor, buddies. Size - a positive number. If you choose a sorted list or a
-                border descriptor allocators, also select a mode - first, best or worst. If you choose
-                another allocator, do not write [] brackets and its content.
+                border descriptor, buddies. Size - a positive number. If you choose a global heap, do
+                not write size with [] brackets. If you choose a sorted list or a border descriptor
+                allocators, also select a mode - first, best or worst. If you choose another allocator,
+                do not write [] brackets and its content.
         }
         Description {
             Adds a new pool to the database, for which the selected allocator will be used.

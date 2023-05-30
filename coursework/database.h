@@ -9,10 +9,6 @@
 #include "../avl_tree/avl_tree.h"
 
 
-////TODO: 1. ENABLE/DISABLE ALLOCATOR'S LOGGING
-////      2. ALLOC NAME GLOBAL_HEAP, COMMAND: ADD POOL, fix readme
-
-
 class database final{
 
     ////* ------------------------------ ENUM FIELD ------------------------------ *////
@@ -55,8 +51,7 @@ private:
         string developer_email;
 
         bool operator==(const pipeline_commit_info& other) const {
-            if(this->hash == other.hash && this->developer_login == other.developer_login && this->developer_email == other.developer_email) return true;
-            else return false;
+            return (this->hash == other.hash && this->developer_login == other.developer_login && this->developer_email == other.developer_email);
         }
 
         bool operator!=(const pipeline_commit_info& other) const {
@@ -75,14 +70,13 @@ private:
         string assembly_artifacts_dir;
 
         bool operator==(const pipeline_value& other) const {
-            if(this->commit_info == other.commit_info &&
+            return (this->commit_info == other.commit_info &&
                this->assembly_script_path == other.assembly_script_path &&
                this->assembly_name == other.assembly_name &&
                this->build_errors == other.build_errors &&
                this->static_code_analysis_errors == other.static_code_analysis_errors &&
                this->autotest_run_errors == other.autotest_run_errors &&
-               this->assembly_artifacts_dir == other.assembly_artifacts_dir) return true;
-            else return false;
+               this->assembly_artifacts_dir == other.assembly_artifacts_dir);
         }
 
         bool operator!=(const pipeline_value& other) const {
@@ -139,7 +133,7 @@ public:
     explicit database(logger* l):
         _logger(l)
     {
-        _database_allocator = new allocator_1();
+        _database_allocator = new allocator_1(_logger);
         _database = new red_black_tree
                                       <string,                                                 //database
                                       red_black_tree <string,                                  //pool
@@ -242,14 +236,16 @@ private:
         string autotest_run_errors_str;
         string assembly_artifacts_dir_str;
 
-        try{ hash_str = parse_field(value_str, "hash"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ developer_login_str = parse_field(value_str, "developer login"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ developer_email_str = parse_field(value_str, "developer email"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ assembly_script_path_str = parse_field(value_str, "assembly script path"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ assembly_name_str = parse_field(value_str, "assembly name"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ build_errors_str = parse_field(value_str, "build errors"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ static_code_analysis_errors_str = parse_field(value_str, "static code analysis errors"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ autotest_run_errors_str = parse_field(value_str, "autotest run errors"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{
+            hash_str = parse_field(value_str, "hash");
+            developer_login_str = parse_field(value_str, "developer login");
+            developer_email_str = parse_field(value_str, "developer email");
+            assembly_script_path_str = parse_field(value_str, "assembly script path");
+            assembly_name_str = parse_field(value_str, "assembly name");
+            build_errors_str = parse_field(value_str, "build errors");
+            static_code_analysis_errors_str = parse_field(value_str, "static code analysis errors");
+            autotest_run_errors_str = parse_field(value_str, "autotest run errors");
+        }catch(const logic_error& ex) { throw ex; }
 
         tmp1 = value_str.find('[');
         if(tmp1 != 0) throw logic_error("Error: wrong format of a value string");
@@ -303,8 +299,10 @@ private:
         size_t tmp1;
         size_t tmp2;
 
-        try{ pool_name = parse_field(command_str, "pool name"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ scheme_name = parse_field(command_str, "scheme name"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{
+            pool_name = parse_field(command_str, "pool name");
+            scheme_name = parse_field(command_str, "scheme name");
+        }catch(const logic_error& ex) { throw ex; }
 
         tmp1 = command_str.find('[');
         if(tmp1 != 0) throw logic_error("Error: wrong format of a command string");
@@ -326,16 +324,16 @@ private:
             string scheme_name;
             string collection_name;
 
-            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw ex; }
 
             pipeline_key k;
             pipeline_value v;
 
-            try{k = std::move(parsing_key(key));} catch(const logic_error& ex) {throw logic_error(ex.what());}
-
-            try{v = std::move(parsing_value(value));} catch(const logic_error& ex) {throw logic_error(ex.what());}
-
-            try{insert(k, v, pool_name, scheme_name, collection_name);} catch(const logic_error& ex) {throw logic_error(ex.what());}
+            try{
+                k = std::move(parsing_key(key));
+                v = std::move(parsing_value(value));
+                insert(k, v, pool_name, scheme_name, collection_name);
+            }catch(const logic_error& ex) {throw ex;}
 
             string msg = ">> Insert DONE! ( key[id: ";
             msg += to_string(k.id);
@@ -352,14 +350,15 @@ private:
             string scheme_name;
             string collection_name;
 
-            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw ex; }
 
             pipeline_key k;
             pipeline_value v;
 
-            try{k = std::move(parsing_key(key));} catch(const logic_error& ex) {throw logic_error(ex.what());}
-
-            try{read_key(k, v, pool_name, scheme_name, collection_name);} catch(const logic_error& ex) {throw logic_error(ex.what());}
+            try{
+                k = std::move(parsing_key(key));
+                read_key(k, v, pool_name, scheme_name, collection_name);
+            }catch(const logic_error& ex) {throw ex;}
 
             string msg = "\n\n>> Reading key [id: ";
             msg += to_string(k.id);
@@ -377,16 +376,16 @@ private:
             string scheme_name;
             string collection_name;
 
-            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw ex; }
 
             pipeline_key k;
             pipeline_value v;
 
-            try{k = std::move(parsing_key(key));} catch(const logic_error& ex) {throw logic_error(ex.what());}
-
-            try{v = std::move(parsing_value(value));} catch(const logic_error& ex) {throw logic_error(ex.what());}
-
-            try{update_key(k, v, pool_name, scheme_name, collection_name);} catch(const logic_error& ex) {throw logic_error(ex.what());}
+            try{
+                k = std::move(parsing_key(key));
+                v = std::move(parsing_value(value));
+                update_key(k, v, pool_name, scheme_name, collection_name);
+            }catch(const logic_error& ex) {throw ex;}
 
             string msg = ">> Update key DONE! ( key[id: ";
             msg += to_string(k.id);
@@ -403,13 +402,14 @@ private:
             string scheme_name;
             string collection_name;
 
-            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw ex; }
 
             pipeline_key k;
 
-            try{k = std::move(parsing_key(key));} catch(const logic_error& ex) {throw logic_error(ex.what());}
-
-            try{remove(k, pool_name, scheme_name, collection_name);} catch(const logic_error& ex) {throw logic_error(ex.what());}
+            try{
+                k = std::move(parsing_key(key));
+                remove(k, pool_name, scheme_name, collection_name);
+            }catch(const logic_error& ex) {throw ex;}
 
             string msg = ">> Remove DONE! ( key[id: ";
             msg += to_string(k.id);
@@ -426,7 +426,7 @@ private:
             size_t size;
             allocation_mode alloc_mode;
 
-            try{ pool_name = parse_field(command_str, "pool name"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ pool_name = parse_field(command_str, "pool name"); } catch(const logic_error& ex){ throw ex; }
 
             tmp1 = command_str.find("{ ");
             if(tmp1 != 0) throw logic_error("Error: wrong format of a command string");
@@ -445,15 +445,21 @@ private:
             else throw logic_error("Error: invalid allocator name");
             command_str = command_str.substr(tmp2 + 2);
 
-            tmp1 = command_str.find('[');
-            if(tmp1 != 0) throw logic_error("Error: wrong format of a command string");
-            tmp2 = command_str.find("] ");
-            if(tmp2 == string::npos) throw logic_error("Error: wrong format of a command string");
-            string size_str = command_str.substr(1, tmp2 - 1);
-            if(size_str.empty()) throw logic_error("Error: invalid size");
-            for(char c : size_str) if(!isdigit(c)) throw logic_error("Error: invalid size");
-            size = (size_t)(stoi(size_str));
-            command_str = command_str.substr(tmp2 + 2);
+            if(alloc_name != names_of_allocators::global_heap){
+                tmp1 = command_str.find('[');
+                if(tmp1 != 0) throw logic_error("Error: wrong format of a command string");
+                tmp2 = command_str.find("] ");
+                if(tmp2 == string::npos) throw logic_error("Error: wrong format of a command string");
+                string size_str = command_str.substr(1, tmp2 - 1);
+                if(size_str.empty()) throw logic_error("Error: invalid size");
+                for(char c : size_str) if(!isdigit(c)) throw logic_error("Error: invalid size");
+                size = (size_t)(stoi(size_str));
+                command_str = command_str.substr(tmp2 + 2);
+            }else{
+                size = 1;
+                tmp1 = command_str.find('}');
+                if(tmp1 != 0) throw logic_error("Error: wrong format of a command string");
+            }
 
             if(alloc_name == names_of_allocators::sorted_list || alloc_name == names_of_allocators::border_descriptor){
                 tmp1 = command_str.find('[');
@@ -476,7 +482,7 @@ private:
                 if(tmp1 != 0) throw logic_error("Error: wrong format of a command string");
             }
 
-            try{ add_pool(pool_name, alloc_name, size, alloc_mode); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ add_pool(pool_name, alloc_name, size, alloc_mode); } catch(const logic_error& ex){ throw ex; }
 
             string msg = ">> Add pool '";
             msg += pool_name;
@@ -495,7 +501,7 @@ private:
             pool_name = command_str.substr(1, tmp2 - 1);
             if(pool_name.empty()) throw logic_error("Error: invalid pool name");
 
-            try{ delete_pool(pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ delete_pool(pool_name); } catch(const logic_error& ex){ throw ex; }
 
             string msg = ">> Delete pool '";
             msg += pool_name;
@@ -508,7 +514,7 @@ private:
             string pool_name;
             string scheme_name;
 
-            try{ pool_name = parse_field(command_str, "pool name"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ pool_name = parse_field(command_str, "pool name"); } catch(const logic_error& ex){ throw ex; }
 
             tmp1 = command_str.find('[');
             if(tmp1 != 0) throw logic_error("Error: wrong format of a command string");
@@ -517,7 +523,7 @@ private:
             scheme_name = command_str.substr(1, tmp2 - 1);
             if(scheme_name.empty()) throw logic_error("Error: invalid scheme name");
 
-            try{ add_scheme(scheme_name, pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ add_scheme(scheme_name, pool_name); } catch(const logic_error& ex){ throw ex; }
 
             string msg = ">> Add scheme '";
             msg += scheme_name;
@@ -532,7 +538,7 @@ private:
             string pool_name;
             string scheme_name;
 
-            try{ pool_name = parse_field(command_str, "pool name"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ pool_name = parse_field(command_str, "pool name"); } catch(const logic_error& ex){ throw ex; }
 
             tmp1 = command_str.find('[');
             if(tmp1 != 0) throw logic_error("Error: wrong format of a command string");
@@ -541,7 +547,7 @@ private:
             scheme_name = command_str.substr(1, tmp2 - 1);
             if(scheme_name.empty()) throw logic_error("Error: invalid scheme name");
 
-            try{ delete_scheme(scheme_name, pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ delete_scheme(scheme_name, pool_name); } catch(const logic_error& ex){ throw ex; }
 
             string msg = ">> Delete scheme '";
             msg += scheme_name;
@@ -558,9 +564,11 @@ private:
             string collection_name;
             names_of_containers tree_name;
 
-            try{ pool_name = parse_field(command_str, "pool name"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-            try{ scheme_name = parse_field(command_str, "scheme name"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-            try{ collection_name = parse_field(command_str, "collection name"); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{
+                pool_name = parse_field(command_str, "pool name");
+                scheme_name = parse_field(command_str, "scheme name");
+                collection_name = parse_field(command_str, "collection name");
+            }catch(const logic_error& ex) { throw ex; }
 
             tmp1 = command_str.find('{');
             if(tmp1 != 0) throw logic_error("Error: wrong format of a command string");
@@ -572,7 +580,7 @@ private:
             else if(tree_name_str == "red black tree") tree_name = names_of_containers::red_black_tree;
             else throw logic_error("Error: invalid tree name");
 
-            try{ add_collection(collection_name, pool_name, scheme_name, tree_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ add_collection(collection_name, pool_name, scheme_name, tree_name); } catch(const logic_error& ex){ throw ex; }
 
             string msg = ">> Add collection '";
             msg += collection_name;
@@ -590,9 +598,10 @@ private:
             string scheme_name;
             string collection_name;
 
-            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-
-            try{ delete_collection(collection_name, pool_name, scheme_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{
+                parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str);
+                delete_collection(collection_name, pool_name, scheme_name);
+            }catch(const logic_error& ex) { throw ex; }
 
             string msg = ">> Delete collection '";
             msg += collection_name;
@@ -618,7 +627,7 @@ private:
             pipeline_key_comparer comparer;
             queue<pair<pipeline_key, pipeline_value>> results;
 
-            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ parsing_pool_scheme_collection(pool_name, scheme_name, collection_name, command_str); } catch(const logic_error& ex){ throw ex; }
 
             if(key.find("keys: ") != 0) throw logic_error("Error: wrong format of a key string");
             key_str = key.substr(6);
@@ -666,7 +675,7 @@ private:
 
             if(k_min_pointer != nullptr && k_max_pointer != nullptr && comparer(k_min, k_max) > 0) throw logic_error("Error: minimum bound is bigger than maximum bound!");
 
-            try{ read_range(results, pool_name, scheme_name, collection_name, k_min_pointer, k_max_pointer); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+            try{ read_range(results, pool_name, scheme_name, collection_name, k_min_pointer, k_max_pointer); } catch(const logic_error& ex){ throw ex; }
 
             string msg = "\n\n>> Reading range from ";
             if(k_min_pointer == nullptr) msg += "Begin to ";
@@ -750,7 +759,7 @@ public:
             }else if(line.find("add pool: ") == 0 || line.find("delete pool: ") == 0 || line.find("add scheme: ") == 0 || line.find("delete scheme: ") == 0 || line.find("add collection: ") == 0 || line.find("delete collection: ") == 0 || line.find("reset database:") == 0){
                 try{ parsing_command(line, line2, line3); } catch(const logic_error& ex){
                     fin.close();
-                    throw logic_error(ex.what());
+                    throw ex;
                 }
                 continue;
             }
@@ -761,7 +770,7 @@ public:
 
             try{ parsing_command(line, line2, line3); } catch(const logic_error& ex){
                 fin.close();
-                throw logic_error(ex.what());
+                throw ex;
             }
         }
         fin.close();
@@ -853,7 +862,7 @@ public:
                     }else if(command_action == "5"){
                         _logger->log("\n#################################################\n\n(?) Note: remove format:\nremove: [pool_name] [scheme_name] [collection_name]\nkey: [id] [build_version]\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
                     }else if(command_action == "6"){
-                        _logger->log("\n#################################################\n\n(?) Note: add pool format:\nadd pool: [pool_name] { [alloc_name] [size] [alloc_mode(only if exists)] }\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
+                        _logger->log("\n#################################################\n\n(?) Note: add pool format:\nadd pool: [pool_name] { [alloc_name] [size(only if needed)] [alloc_mode(only if exists)] }\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
                     }else if(command_action == "7"){
                         _logger->log("\n#################################################\n\n(?) Note: delete pool format:\ndelete pool: [pool_name]\nFor more information check out README file!\n\n#### Enter a command line ####\n\n###> Command line:", logger::severity::warning);
                     }else if(command_action == "8"){
@@ -975,16 +984,19 @@ private:
         red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* scheme;
         associative_container<pipeline_key, pipeline_value>* collection;
 
-        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ scheme = get_scheme(scheme_name, pool); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ collection = get_collection(collection_name, scheme); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{
+            pool = get_pool(pool_name);
+            scheme = get_scheme(scheme_name, pool);
+            collection = get_collection(collection_name, scheme);
+        }catch(const logic_error& ex) { throw ex; }
 
         try{
             collection->insert(key, value);
         }catch(const logic_error& ex){
             string error_msg = "Error: in collection '";
             error_msg += collection_name;
-            error_msg += "': key is already exists!";
+            error_msg += "': ";
+            error_msg += ex.what();
             throw logic_error(error_msg);
         }
 
@@ -996,9 +1008,11 @@ private:
         red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* scheme;
         associative_container<pipeline_key, pipeline_value>* collection;
 
-        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ scheme = get_scheme(scheme_name, pool); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ collection = get_collection(collection_name, scheme); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{
+            pool = get_pool(pool_name);
+            scheme = get_scheme(scheme_name, pool);
+            collection = get_collection(collection_name, scheme);
+        }catch(const logic_error& ex) { throw ex; }
 
         try{
             value = collection->get(key);
@@ -1017,9 +1031,11 @@ private:
         red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* scheme;
         associative_container<pipeline_key, pipeline_value>* collection;
 
-        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ scheme = get_scheme(scheme_name, pool); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ collection = get_collection(collection_name, scheme); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{
+            pool = get_pool(pool_name);
+            scheme = get_scheme(scheme_name, pool);
+            collection = get_collection(collection_name, scheme);
+        }catch(const logic_error& ex) { throw ex; }
 
         auto* collection_casted = dynamic_cast<binary_search_tree<pipeline_key, pipeline_value, pipeline_key_comparer>*>(collection);
         if(collection_casted == nullptr) throw logic_error("Error: undefined tree type of collection!");
@@ -1057,7 +1073,7 @@ private:
             remove(key, pool_name, scheme_name, collection_name);
             insert(key, value, pool_name, scheme_name, collection_name);
         }catch(const logic_error& ex){
-            throw logic_error(ex.what());
+            throw ex;
         }
 
         _logger->log("(update key complete)", logger::severity::information);
@@ -1068,9 +1084,11 @@ private:
         red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* scheme;
         associative_container<pipeline_key, pipeline_value>* collection;
 
-        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ scheme = get_scheme(scheme_name, pool); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ collection = get_collection(collection_name, scheme); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{
+            pool = get_pool(pool_name);
+            scheme = get_scheme(scheme_name, pool);
+            collection = get_collection(collection_name, scheme);
+        }catch(const logic_error& ex) { throw ex; }
 
         try{
             collection->remove(key);
@@ -1097,19 +1115,19 @@ private:
 
         abstract_allocator* alloc;
         if(allocator_name == names_of_allocators::sorted_list){
-            if(mode == allocation_mode::first) alloc = new allocator_2(size, allocator_2::mode::first);
-            else if(mode == allocation_mode::best) alloc = new allocator_2(size, allocator_2::mode::best);
-            else if(mode == allocation_mode::worst) alloc = new allocator_2(size, allocator_2::mode::worst);
+            if(mode == allocation_mode::first) alloc = new allocator_2(size, allocator_2::mode::first, _logger);
+            else if(mode == allocation_mode::best) alloc = new allocator_2(size, allocator_2::mode::best, _logger);
+            else if(mode == allocation_mode::worst) alloc = new allocator_2(size, allocator_2::mode::worst, _logger);
             else throw logic_error("Error: in add_pool: wrong allocation mode!");
         }else if(allocator_name == names_of_allocators::border_descriptor){
-            if (mode == allocation_mode::first) alloc = new allocator_3(size, allocator_3::mode::first);
-            else if (mode == allocation_mode::best) alloc = new allocator_3(size, allocator_3::mode::best);
-            else if (mode == allocation_mode::worst) alloc = new allocator_3(size, allocator_3::mode::worst);
+            if (mode == allocation_mode::first) alloc = new allocator_3(size, allocator_3::mode::first, _logger);
+            else if (mode == allocation_mode::best) alloc = new allocator_3(size, allocator_3::mode::best, _logger);
+            else if (mode == allocation_mode::worst) alloc = new allocator_3(size, allocator_3::mode::worst, _logger);
             else throw logic_error("Error: in add_pool: wrong allocation mode!");
         }else if(allocator_name == names_of_allocators::buddies){
-            alloc = new allocator_buddies(size);
+            alloc = new allocator_buddies(size, _logger);
         }else{
-            alloc = new allocator_1();
+            alloc = new allocator_1(_logger);
         }
 
         auto* tree = reinterpret_cast<red_black_tree<string, red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>*, string_comparer>*>(alloc->allocate(reinterpret_cast<size_t>(sizeof(red_black_tree<string, red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>*, string_comparer>))));
@@ -1125,7 +1143,7 @@ private:
     void delete_pool(const string& pool_name){
         red_black_tree<string, red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>*, string_comparer>* pool;
 
-        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw ex; }
 
         auto iter = pool->begin_postf();
         auto end_iter = pool->end_postf();
@@ -1149,7 +1167,7 @@ private:
     void add_scheme(const string& scheme_name, const string& pool_name){
         red_black_tree<string, red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>*, string_comparer>* pool;
 
-        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw ex; }
 
         bool flag = false;
         try{pool->get(scheme_name);}catch(const logic_error& ex){ flag = true;}
@@ -1174,8 +1192,10 @@ private:
         red_black_tree<string, red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>*, string_comparer>* pool;
         red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* scheme;
 
-        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ scheme = get_scheme(scheme_name, pool); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{
+            pool = get_pool(pool_name);
+            scheme = get_scheme(scheme_name, pool);
+        }catch(const logic_error& ex) { throw ex; }
 
         auto iter = scheme->begin_postf();
         auto end_iter = scheme->end_postf();
@@ -1197,8 +1217,10 @@ private:
         red_black_tree<string, red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>*, string_comparer>* pool;
         red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* scheme;
 
-        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ scheme = get_scheme(scheme_name, pool); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{
+            pool = get_pool(pool_name);
+            scheme = get_scheme(scheme_name, pool);
+        }catch(const logic_error& ex) { throw ex; }
 
         bool flag = false;
         try{scheme->get(collection_name);}catch(const logic_error& ex){flag = true;}
@@ -1231,9 +1253,11 @@ private:
         red_black_tree<string, associative_container<pipeline_key, pipeline_value>*, string_comparer>* scheme;
         associative_container<pipeline_key, pipeline_value>* collection;
 
-        try{ pool = get_pool(pool_name); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ scheme = get_scheme(scheme_name, pool); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
-        try{ collection = get_collection(collection_name, scheme); } catch(const logic_error& ex){ throw logic_error(ex.what()); }
+        try{
+            pool = get_pool(pool_name);
+            scheme = get_scheme(scheme_name, pool);
+            collection = get_collection(collection_name, scheme);
+        }catch(const logic_error& ex) { throw ex; }
 
         auto* alloc = _pool_allocators->get(pool_name);
         collection->~associative_container();
