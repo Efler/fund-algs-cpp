@@ -67,9 +67,9 @@ public:
         return not_equals(other);
     }
 
-    virtual std::istream& operator >> (std::istream& in) const = 0;
+    friend std::istream& operator >> (std::istream& in, abstract_big_int* bigint);
 
-    virtual std::ostream& operator << (std::ostream& out) const = 0;
+    friend std::ostream& operator << (std::ostream& out, const abstract_big_int* bigint);
 
     virtual ~abstract_big_int() = default;
 
