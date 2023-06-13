@@ -20,18 +20,9 @@ private:
     abstract_allocator* _alloc;
     logger* _logger;
 
-    ////-------------------------------- ADDITIONAL FUNCTIONS FIELD --------------------------------////
-
 private:
 
-    bool fits_into_int(const string& str_num, int sign){
-        string str_max_int = to_string((static_cast<int>(1) << ((sizeof(int) << 3) - 1)) - 1);
-        string str_min_int = to_string(static_cast<int>(1) << ((sizeof(int) << 3) - 1)).substr(1);
-
-        return (str_num.size() < str_max_int.size() ||
-          (str_num.size() == str_max_int.size() && ((!sign && str_num.compare(str_max_int) <= 0) ||
-                                                    (sign && str_num.compare(str_min_int) <= 0))));
-    }
+    ////-------------------------------- STRING_NUMBER FUNCTIONS FIELD --------------------------------////
 
     static void reverse_str(string& s){
         string tmp;
@@ -94,12 +85,12 @@ private:
         if(s1.size() < s2.size()){
             size_t difference = s2.size() - s1.size();
             for(size_t i = 0; i < difference; ++i){
-                s1 = "0" + s1;
+                s1.insert(0, "0");
             }
         }else if(s1.size() > s2.size()){
             size_t difference = s1.size() - s2.size();
             for(size_t i = 0; i < difference; ++i){
-                s2 = "0" + s2;
+                s2.insert(0, "0");
             }
         }
     }
@@ -113,7 +104,7 @@ private:
         reverse_str(s2);
 
         for(int i = 0; i < s1.size(); ++i){
-            result = to_string(((s1[i] - '0') + (s2[i] - '0') + tmp) % 10) + result;
+            result.insert(0, to_string(((s1[i] - '0') + (s2[i] - '0') + tmp) % 10));
             tmp = ((s1[i] - '0') + (s2[i] - '0') + tmp) / 10;
         }
         if(tmp > 0) result = to_string(tmp) + result;
@@ -165,6 +156,147 @@ private:
         for(int i = 0; i < n-1; ++i){
             multiply_str(s, tmp);
         }
+    }
+
+    static int str_num_comparer(const string& num1, const string& num2){
+        size_t num1_size = num1.size();
+        size_t num2_size = num2.size();
+        if(num1_size > num2_size) return 1;
+        else if(num1_size < num2_size) return -1;
+        else{
+            return num1.compare(num2);
+        }
+    }
+
+    string sum_in_strings(const string& num1, const string& num2) const {
+        string result;
+
+        size_t str_case = 0;
+        string copy_num1 = num1;
+        string copy_num2 = num2;
+
+        if (num2[0] == '-'){
+            copy_num2 = num2.substr(1);
+            return subtract_in_strings(copy_num1, copy_num2);
+        }else if (num1[0] == '-'){
+            str_case = 1;
+            copy_num1 = num1.substr(1);
+        }
+
+        size_t max_length = (size_t)max(copy_num1.size(), copy_num2.size());
+        int borrow = 0;
+
+        if(str_case == 0) {
+            for (int i = 0; i < max_length || borrow != 0; i++) {
+                int digit1 = (i < copy_num1.length()) ? (copy_num1[copy_num1.length() - i - 1] - '0') : 0;
+                int digit2 = (i < copy_num2.length()) ? (copy_num2[copy_num2.length() - i - 1] - '0') : 0;
+
+                int diff = digit1 + digit2 + borrow;
+
+                if (diff > 9) {
+                    borrow = diff / 10;
+                    diff %= 10;
+                }else{
+                    borrow = 0;
+                }
+
+                result.push_back(static_cast<char>(diff + '0'));
+            }
+
+            while (result.length() > 1 && result.back() == '0') {
+                result.pop_back();
+            }
+
+            reverse(result.begin(), result.end());
+
+            return result;
+        }else{
+            if (str_num_comparer(copy_num1, copy_num2) > 0){
+                result = subtract_in_strings(copy_num1, copy_num2);
+                result.insert(0, "-");
+                return result;
+            }else if (str_num_comparer(copy_num1, copy_num2) == 0) {
+                result += '0';
+                return result;
+            }else{
+                string tmp = copy_num1;
+                copy_num1 = copy_num2;
+                copy_num2 = tmp;
+                return subtract_in_strings(copy_num1, copy_num2);
+            }
+        }
+    }
+
+    string subtract_in_strings(const string& num1, const string& num2) const {
+        string result;
+
+        size_t str_case = 0;
+        string copy_num1 = num1;
+        string copy_num2 = num2;
+
+        if (num2[0] == '-'){
+            copy_num2 = num2.substr(1);
+            return sum_in_strings(copy_num1, copy_num2);
+        }else if (num1[0] == '-'){
+            str_case = 1;
+            copy_num1 = num1.substr(1);
+        }
+
+        size_t max_length = (size_t)max(copy_num1.size(), copy_num2.size());
+        int borrow = 0;
+
+        if(str_case == 0){
+            int sign = 0;
+            if(str_num_comparer(copy_num1, copy_num2) < 0){
+                sign++;
+                string tmp = copy_num1;
+                copy_num1 = copy_num2;
+                copy_num2 = tmp;
+            }else if(str_num_comparer(copy_num1, copy_num2) == 0){
+                result += '0';
+                return result;
+            }
+
+            for (int i = 0; i < max_length; i++){
+                int digit1 = (i < copy_num1.length()) ? (copy_num1[copy_num1.length() - i - 1] - '0') : 0;
+                int digit2 = (i < copy_num2.length()) ? (copy_num2[copy_num2.length() - i - 1] - '0') : 0;
+
+                int diff = digit1 - digit2 - borrow;
+
+                if (diff < 0){
+                    diff += 10;
+                    borrow = 1;
+                }else{
+                    borrow = 0;
+                }
+
+                result.push_back(static_cast<char>(diff + '0'));
+            }
+
+            while (result.length() > 1 && result.back() == '0') {
+                result.pop_back();
+            }
+            if(sign && result != "0") result.push_back('-');
+
+            reverse(result.begin(), result.end());
+
+        }else{
+            result = sum_in_strings(copy_num1, copy_num2);
+            result.insert(0, "-");
+        }
+
+        return result;
+    }
+
+    ////-------------------------------- ADDITIONAL FUNCTIONS FIELD --------------------------------////
+
+    bool fits_into_int(const string& str_num, int sign){
+        string str_max_int = to_string((static_cast<int>(1) << ((sizeof(int) << 3) - 1)) - 1);
+        string str_min_int = to_string(static_cast<int>(1) << ((sizeof(int) << 3) - 1)).substr(1);
+
+        return (str_num.size() < str_max_int.size() ||
+          (str_num.size() == str_max_int.size() && ((!sign && str_num.compare(str_max_int) <= 0) ||
+                                                    (sign && str_num.compare(str_min_int) <= 0))));
     }
 
     void convert_to_base(string str_num){
@@ -227,7 +359,7 @@ private:
 
 public:
 
-    explicit big_int_concrete(const string& string_number = "0", logger* logger = nullptr, abstract_allocator* allocator = nullptr):
+    big_int_concrete(const string& string_number = "0", logger* logger = nullptr, abstract_allocator* allocator = nullptr):
             _logger(logger), _alloc(allocator), _sign(0)
     {
         string str_num = string_number;
@@ -271,11 +403,14 @@ public:
             }else{
                 _digits = new vector<size_t>;
             }
-            copy(other._digits->begin(), other._digits->end(), back_insert_iterator<vector<size_t>>(*_digits));
+            copy(other._digits->begin(), other._digits->end(), back_inserter(*_digits));
         }
 
         if(_logger != nullptr) _logger->log("CONSTRUCTOR: big int COPIED!", logger::severity::debug);
     }
+
+    big_int_concrete(const char string_number[]):
+            big_int_concrete(string_number, nullptr, nullptr){}
 
     big_int_concrete(big_int_concrete&& other) noexcept {
         _logger = other._logger;
@@ -315,7 +450,7 @@ public:
                     }
                 }
 
-                copy(other._digits->begin(), other._digits->end(), back_insert_iterator<vector<size_t>>(*_digits));
+                copy(other._digits->begin(), other._digits->end(), back_inserter(*_digits));
             }
         }
 
@@ -368,44 +503,323 @@ public:
 
     friend ostream& operator << (ostream& out, const big_int_concrete* bigint);
 
+    friend istream& operator >> (istream& in, big_int_concrete& bigint);
+
+    friend ostream& operator << (ostream& out, const big_int_concrete& bigint);
+
     abstract_big_int* add(const abstract_big_int* summand) override {
-        ////todo: !!!!
+        auto* smnd = dynamic_cast<const big_int_concrete*>(summand);
+
+        string num1 = this->convert_to_string();
+        string num2 = smnd->convert_to_string();
+
+        string result = sum_in_strings(num1, num2);
+        _sign = 0;
+
+        if(result[0] == '-'){
+            _sign = 1;
+            result = result.substr(1);
+        }
+
+        if(fits_into_int(result, _sign)){
+            if(_sign) _sign = stoi('-' + result);
+            else _sign = stoi(result);
+            if(_digits != nullptr){
+                if(_alloc != nullptr){
+                    _digits->~vector<size_t>();
+                    _alloc->deallocate(reinterpret_cast<void*>(_digits));
+                }else{
+                    delete _digits;
+                }
+                _digits = nullptr;
+            }
+        }else{
+            if(_alloc != nullptr){
+                _digits = reinterpret_cast<vector<size_t>*>(_alloc->allocate(sizeof(vector<size_t>)));
+                new (_digits) vector<size_t>;
+            }else{
+                _digits = new vector<size_t>;
+            }
+
+            convert_to_base(result);
+        }
+
+        if(_logger != nullptr) _logger->log("ADD: Done!", logger::severity::debug);
+        return this;
+    }
+
+    big_int_concrete* operator += (const big_int_concrete* summand){
+        return dynamic_cast<big_int_concrete*>(add(summand));
+    }
+
+    big_int_concrete& operator += (const big_int_concrete& summand){
+        return *(dynamic_cast<big_int_concrete*>(add(&summand)));
     }
 
     abstract_big_int* sum(const abstract_big_int* summand) const override {
-        ////todo: !!!!
+        auto* smnd = dynamic_cast<const big_int_concrete*>(summand);
+
+        string num1 = this->convert_to_string();
+        string num2 = smnd->convert_to_string();
+
+        string result = sum_in_strings(num1, num2);
+
+        auto* res_bigint = new big_int_concrete(result);
+
+        if(_logger != nullptr) _logger->log("SUM: Done!", logger::severity::debug);
+        return res_bigint;
+    }
+
+    big_int_concrete* operator + (const big_int_concrete* summand) const {
+        return dynamic_cast<big_int_concrete*>(sum(summand));
+    }
+
+    big_int_concrete operator + (const big_int_concrete& summand) const {
+        string num1 = this->convert_to_string();
+        string num2 = summand.convert_to_string();
+
+        string result = sum_in_strings(num1, num2);
+
+        big_int_concrete res_bigint = result;
+
+        if(_logger != nullptr) _logger->log("SUM: Done!", logger::severity::debug);
+        return res_bigint;
     }
 
     abstract_big_int* subtract(const abstract_big_int* subtrahend) override {
-        ////todo: !!!!
+        auto* subtr = dynamic_cast<const big_int_concrete*>(subtrahend);
+
+        string num1 = this->convert_to_string();
+        string num2 = subtr->convert_to_string();
+
+        string result = subtract_in_strings(num1, num2);
+        _sign = 0;
+
+        if(result[0] == '-'){
+            _sign = 1;
+            result = result.substr(1);
+        }
+
+        if(fits_into_int(result, _sign)){
+            if(_sign) _sign = stoi('-' + result);
+            else _sign = stoi(result);
+            if(_digits != nullptr){
+                if(_alloc != nullptr){
+                    _digits->~vector<size_t>();
+                    _alloc->deallocate(reinterpret_cast<void*>(_digits));
+                }else{
+                    delete _digits;
+                }
+                _digits = nullptr;
+            }
+        }else{
+            if(_alloc != nullptr){
+                _digits = reinterpret_cast<vector<size_t>*>(_alloc->allocate(sizeof(vector<size_t>)));
+                new (_digits) vector<size_t>;
+            }else{
+                _digits = new vector<size_t>;
+            }
+
+            convert_to_base(result);
+        }
+
+        if(_logger != nullptr) _logger->log("SUBTRACT: Done!", logger::severity::debug);
+        return this;
+    }
+
+    big_int_concrete* operator -= (const big_int_concrete* subtrahend){
+        return dynamic_cast<big_int_concrete*>(subtract(subtrahend));
+    }
+
+    big_int_concrete& operator -= (const big_int_concrete& subtrahend){
+        return *(dynamic_cast<big_int_concrete*>(subtract(&subtrahend)));
     }
 
     abstract_big_int* subtraction(const abstract_big_int* subtrahend) const override {
-        ////todo: !!!!
+        auto* subtr = dynamic_cast<const big_int_concrete*>(subtrahend);
+
+        string num1 = this->convert_to_string();
+        string num2 = subtr->convert_to_string();
+
+        string result = subtract_in_strings(num1, num2);
+
+        auto* res_bigint = new big_int_concrete(result);
+
+        if(_logger != nullptr) _logger->log("SUBTRACTION: Done!", logger::severity::debug);
+        return res_bigint;
+    }
+
+    big_int_concrete* operator - (const big_int_concrete* subtrahend) const {
+        return dynamic_cast<big_int_concrete*>(subtraction(subtrahend));
+    }
+
+    big_int_concrete operator - (const big_int_concrete& subtrahend) const {
+        string num1 = this->convert_to_string();
+        string num2 = subtrahend.convert_to_string();
+
+        string result = subtract_in_strings(num1, num2);
+
+        big_int_concrete res_bigint = result;
+
+        if(_logger != nullptr) _logger->log("SUBTRACTION: Done!", logger::severity::debug);
+        return res_bigint;
     }
 
     bool lower_than(const abstract_big_int* other) const override {
-        ////todo: !!!!
+        auto* o = dynamic_cast<const big_int_concrete*>(other);
+        if(_digits == nullptr){
+            if(o->_digits == nullptr){
+                return _sign < o->_sign;
+            }else{
+                return !(o->_sign);
+            }
+        }else{
+            if(o->_digits == nullptr){
+                return _sign;
+            }else{
+                if(_sign && !(o->_sign)) return true;
+                else if(!_sign && o->_sign) return false;
+                else if(_sign && o->_sign){
+                    if(_digits->size() != o->_digits->size()){
+                        return _digits->size() > o->_digits->size();
+                    }else{
+                        vector<size_t> v1 = *_digits;
+                        reverse(v1.begin(), v1.end());
+                        vector<size_t> v2 = *(o->_digits);
+                        reverse(v2.begin(), v2.end());
+                        return (v1 > v2);
+                    }
+                }
+                else if(!_sign && !(o->_sign)){
+                    if(_digits->size() != o->_digits->size()){
+                        return _digits->size() < o->_digits->size();
+                    }else{
+                        vector<size_t> v1 = *_digits;
+                        reverse(v1.begin(), v1.end());
+                        vector<size_t> v2 = *(o->_digits);
+                        reverse(v2.begin(), v2.end());
+                        return (v1 < v2);
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    bool operator < (const big_int_concrete* other) const {
+        return lower_than(other);
+    }
+
+    bool operator < (const big_int_concrete& other) const {
+        return lower_than(&other);
     }
 
     bool greater_than(const abstract_big_int* other) const override {
-        ////todo: !!!!
+        auto* o = dynamic_cast<const big_int_concrete*>(other);
+        if(_digits == nullptr){
+            if(o->_digits == nullptr){
+                return _sign > o->_sign;
+            }else{
+                return (o->_sign);
+            }
+        }else{
+            if(o->_digits == nullptr){
+                return !_sign;
+            }else{
+                if(_sign && !(o->_sign)) return false;
+                else if(!_sign && o->_sign) return true;
+                else if(_sign && o->_sign){
+                    if(_digits->size() != o->_digits->size()){
+                        return _digits->size() < o->_digits->size();
+                    }else{
+                        vector<size_t> v1 = *_digits;
+                        reverse(v1.begin(), v1.end());
+                        vector<size_t> v2 = *(o->_digits);
+                        reverse(v2.begin(), v2.end());
+                        return (v1 < v2);
+                    }
+                }
+                else if(!_sign && !(o->_sign)){
+                    if(_digits->size() != o->_digits->size()){
+                        return _digits->size() > o->_digits->size();
+                    }else{
+                        vector<size_t> v1 = *_digits;
+                        reverse(v1.begin(), v1.end());
+                        vector<size_t> v2 = *(o->_digits);
+                        reverse(v2.begin(), v2.end());
+                        return (v1 > v2);
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    bool operator > (const big_int_concrete* other) const {
+        return greater_than(other);
+    }
+
+    bool operator > (const big_int_concrete& other) const {
+        return greater_than(&other);
     }
 
     bool lower_than_or_equal_to(const abstract_big_int* other) const override {
-        ////todo: !!!!
+        return (equals(other) || lower_than(other));
+    }
+
+    bool operator <= (const big_int_concrete* other) const {
+        return lower_than_or_equal_to(other);
+    }
+
+    bool operator <= (const big_int_concrete& other) const {
+        return lower_than_or_equal_to(&other);
     }
 
     bool greater_than_or_equal_to(const abstract_big_int* other) const override {
-        ////todo: !!!!
+        return (equals(other) || greater_than(other));
+    }
+
+    bool operator >= (const big_int_concrete* other) const {
+        return greater_than_or_equal_to(other);
+    }
+
+    bool operator >= (const big_int_concrete& other) const {
+        return greater_than_or_equal_to(&other);
     }
 
     bool equals(const abstract_big_int* other) const override {
-        ////todo: !!!!
+        auto* o = dynamic_cast<const big_int_concrete*>(other);
+        if(_digits == nullptr){
+            if(o->_digits == nullptr){
+                return _sign == o->_sign;
+            }else return false;
+        }else{
+            if(o->_digits == nullptr){
+                return false;
+            }else{
+                return (_sign == o->_sign && *_digits == (*o->_digits));
+            }
+        }
+    }
+
+    bool operator == (const big_int_concrete* other) const {
+        return equals(other);
+    }
+
+    bool operator == (const big_int_concrete& other) const {
+        return equals(&other);
     }
 
     bool not_equals(const abstract_big_int* other) const override {
-        ////todo: !!!!
+        return !equals(other);
+    }
+
+    bool operator != (const big_int_concrete* other) const {
+        return not_equals(other);
+    }
+
+    bool operator != (const big_int_concrete& other) const {
+        return not_equals(&other);
     }
 
 };
@@ -457,6 +871,14 @@ istream& operator >> (istream& in, big_int_concrete* bigint){
 
     if(bigint->_logger != nullptr) bigint->_logger->log("OPERATOR >> : big int CHANGED!", logger::severity::debug);
     return in;
+}
+
+ostream& operator << (ostream& out, const big_int_concrete& bigint){
+    return operator<<(out, &bigint);
+}
+
+istream& operator >> (istream& in, big_int_concrete& bigint){
+    return operator>>(in, &bigint);
 }
 
 ostream& operator << (ostream& out, const abstract_big_int* bigint){
