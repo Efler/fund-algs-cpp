@@ -34,6 +34,9 @@ private:
         string tmp;
         string result;
         string divide_res;
+        while(str_num[0] == '0' && str_num.size() > 1){
+            str_num = str_num.substr(1);
+        }
         if(str_num == "0") return str_num;
 
         while(!str_num.empty()){
@@ -67,6 +70,9 @@ private:
     static string str_base2_to_str_base10(string str_num){
         string result;
         string tmp = "2";
+        while(str_num[0] == '0' && str_num.size() > 1){
+            str_num = str_num.substr(1);
+        }
         if(str_num == "0") return str_num;
 
         reverse_str(str_num);
@@ -355,6 +361,14 @@ private:
         return result;
     }
 
+    bool is_negative() const {
+        if(_digits == nullptr){
+            return _sign < 0;
+        }else{
+            return _sign;
+        }
+    }
+
     ////------------------------------------ CONSTRUCTORS FIELD ------------------------------------////
 
 public:
@@ -534,11 +548,15 @@ public:
                 _digits = nullptr;
             }
         }else{
-            if(_alloc != nullptr){
-                _digits = reinterpret_cast<vector<size_t>*>(_alloc->allocate(sizeof(vector<size_t>)));
-                new (_digits) vector<size_t>;
+            if(_digits != nullptr){
+                _digits->clear();
             }else{
-                _digits = new vector<size_t>;
+                if(_alloc != nullptr){
+                    _digits = reinterpret_cast<vector<size_t>*>(_alloc->allocate(sizeof(vector<size_t>)));
+                    new (_digits) vector<size_t>;
+                }else{
+                    _digits = new vector<size_t>;
+                }
             }
 
             convert_to_base(result);
@@ -613,11 +631,15 @@ public:
                 _digits = nullptr;
             }
         }else{
-            if(_alloc != nullptr){
-                _digits = reinterpret_cast<vector<size_t>*>(_alloc->allocate(sizeof(vector<size_t>)));
-                new (_digits) vector<size_t>;
+            if(_digits != nullptr){
+                _digits->clear();
             }else{
-                _digits = new vector<size_t>;
+                if(_alloc != nullptr){
+                    _digits = reinterpret_cast<vector<size_t>*>(_alloc->allocate(sizeof(vector<size_t>)));
+                    new (_digits) vector<size_t>;
+                }else{
+                    _digits = new vector<size_t>;
+                }
             }
 
             convert_to_base(result);
@@ -662,6 +684,125 @@ public:
         big_int_concrete res_bigint = result;
 
         if(_logger != nullptr) _logger->log("SUBTRACTION: Done!", logger::severity::debug);
+        return res_bigint;
+    }
+
+    abstract_big_int* multiply(const abstract_big_int* right_multiplier) override {
+        auto* right_mult = dynamic_cast<const big_int_concrete*>(right_multiplier);
+
+        string bi1 = this->convert_to_string();
+        string bi2 = right_mult->convert_to_string();
+        size_t negative_result = 0;
+
+        if( (!(this->is_negative()) && (right_mult->is_negative())) || ((this->is_negative()) && !(right_mult->is_negative())) ){
+            negative_result++;
+            if(this->is_negative()) bi1 = bi1.substr(1);
+            else bi2 = bi2.substr(1);
+        }else if(this->is_negative() && right_mult->is_negative()){
+            bi1 = bi1.substr(1);
+            bi2 = bi2.substr(1);
+        }
+
+        multiply_str(bi1, bi2);
+        if(negative_result && bi1 != "0") bi1.insert(0, "-");
+
+        _sign = 0;
+
+        if(bi1[0] == '-'){
+            _sign = 1;
+            bi1 = bi1.substr(1);
+        }
+
+        if(fits_into_int(bi1, _sign)){
+            if(_sign) _sign = stoi('-' + bi1);
+            else _sign = stoi(bi1);
+            if(_digits != nullptr){
+                if(_alloc != nullptr){
+                    _digits->~vector<size_t>();
+                    _alloc->deallocate(reinterpret_cast<void*>(_digits));
+                }else{
+                    delete _digits;
+                }
+                _digits = nullptr;
+            }
+        }else{
+            if(_digits != nullptr){
+                _digits->clear();
+            }else{
+                if(_alloc != nullptr){
+                    _digits = reinterpret_cast<vector<size_t>*>(_alloc->allocate(sizeof(vector<size_t>)));
+                    new (_digits) vector<size_t>;
+                }else{
+                    _digits = new vector<size_t>;
+                }
+            }
+
+            convert_to_base(bi1);
+        }
+
+        if(_logger != nullptr) _logger->log("MULTIPLY: Done!", logger::severity::debug);
+        return this;
+    }
+
+    big_int_concrete* operator *= (const big_int_concrete* right_multiplier){
+        return dynamic_cast<big_int_concrete*>(multiply(right_multiplier));
+    }
+
+    big_int_concrete& operator *= (const big_int_concrete& right_multiplier){
+        return *(dynamic_cast<big_int_concrete*>(multiply(&right_multiplier)));
+    }
+
+    abstract_big_int* multiplication(const abstract_big_int* right_multiplier) const override {
+        auto* right_mult = dynamic_cast<const big_int_concrete*>(right_multiplier);
+        string bi1 = this->convert_to_string();
+        string bi2 = right_mult->convert_to_string();
+        size_t negative_result = 0;
+
+        if( (!(this->is_negative()) && (right_mult->is_negative())) || ((this->is_negative()) && !(right_mult->is_negative())) ){
+            negative_result++;
+            if(this->is_negative()) bi1 = bi1.substr(1);
+            else bi2 = bi2.substr(1);
+        }else if(this->is_negative() && right_mult->is_negative()){
+            bi1 = bi1.substr(1);
+            bi2 = bi2.substr(1);
+        }
+
+        multiply_str(bi1, bi2);
+
+        if(negative_result && bi1 != "0") bi1.insert(0, "-");
+
+        auto* res_bigint = new big_int_concrete(bi1);
+
+        if(_logger != nullptr) _logger->log("MULTIPLICATION: Done!", logger::severity::debug);
+
+        return res_bigint;
+    }
+
+    big_int_concrete* operator * (const big_int_concrete* right_multiplier) const {
+        return dynamic_cast<big_int_concrete*>(multiplication(right_multiplier));
+    }
+
+    big_int_concrete operator * (const big_int_concrete& right_multiplier) const {
+        string bi1 = this->convert_to_string();
+        string bi2 = right_multiplier.convert_to_string();
+        size_t negative_result = 0;
+
+        if( (!(this->is_negative()) && (right_multiplier.is_negative())) || ((this->is_negative()) && !(right_multiplier.is_negative())) ){
+            negative_result++;
+            if(this->is_negative()) bi1 = bi1.substr(1);
+            else bi2 = bi2.substr(1);
+        }else if(this->is_negative() && right_multiplier.is_negative()){
+            bi1 = bi1.substr(1);
+            bi2 = bi2.substr(1);
+        }
+
+        multiply_str(bi1, bi2);
+        if(negative_result && bi1 != "0") bi1.insert(0, "-");
+
+        big_int_concrete res_bigint = bi1;
+
+        if(_logger != nullptr) _logger->log("MULTIPLICATION: Done!", logger::severity::debug);
+
         return res_bigint;
     }
 

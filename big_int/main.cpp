@@ -4,6 +4,21 @@
 #include <random>
 
 
+void factorial_test_only_classic_multiplication(size_t iterations){
+    big_int_concrete x = "0";
+    for(int i = 1; i < iterations; ++i){
+        cout << "iteration #" << i << " is working..." << endl;
+        big_int_concrete y = "1";
+        for(int j = 1; j < i+1; ++j){
+            big_int_concrete z = to_string(j);
+            y *= z;
+        }
+        x += y;
+    }
+    cout << "Result --> " << x << endl;
+}
+
+
 string random_string_number(size_t min_str_size, size_t max_str_size, bool only_positive = false, int seed = 0){
     string str_res;
 
@@ -50,7 +65,7 @@ void bigint_test(size_t iterations = 100, int seed = 0){
     random_device rd;
     mt19937 generator(rd());
     if(seed != 0) generator.seed(seed);
-    uniform_int_distribution<size_t> distribution_action(0, 9);
+    uniform_int_distribution<size_t> distribution_action(0, 10);
 
     uniform_int_distribution<int> distribution_seed(0, 2000000000);
 
@@ -122,6 +137,10 @@ void bigint_test(size_t iterations = 100, int seed = 0){
                 bool_res = num1 >= num2 ? "true" : "false";
                 cout << num1 << " >= " << num2 << " ===>> " << bool_res << endl;
                 break;
+            case 10:
+                cout << ">> action '*'" << endl;
+                num3 = num1 * num2;
+                cout << num1 << " * " << num2 << " = " << num3 << endl;
             default:
                 break;
         }
@@ -138,12 +157,16 @@ void bigint_test(size_t iterations = 100, int seed = 0){
 
 int main(){
 
-// ------- random test ------------------------------------------------------
+// ------- random test -------------------------------------------------------
 
-    bigint_test(150);
+    bigint_test(150, 69696969);
+
+// ------- factorial test (only classic multiplication) ----------------------
+
+//    factorial_test_only_classic_multiplication(55);
 
 // ------- simple tests ------------------------------------------------------
-//
+
 //    auto* builder = new logger_builder();
 //    auto* logger = builder->add_stream("console", logger::severity::debug)->build();
 //    auto* allocator = new allocator_3(500000, allocator_3::mode::best);

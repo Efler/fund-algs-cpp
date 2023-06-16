@@ -67,6 +67,18 @@ public:
         return not_equals(other);
     }
 
+    virtual abstract_big_int* multiply(const abstract_big_int* right_multiplier) = 0;
+
+    virtual abstract_big_int* operator *= (const abstract_big_int* right_multiplier){
+        return multiply(right_multiplier);
+    }
+
+    virtual abstract_big_int* multiplication(const abstract_big_int* right_multiplier) const = 0;
+
+    virtual abstract_big_int* operator * (const abstract_big_int* right_multiplier) const {
+        return multiplication(right_multiplier);
+    }
+
     friend std::istream& operator >> (std::istream& in, abstract_big_int* bigint);
 
     friend std::ostream& operator << (std::ostream& out, const abstract_big_int* bigint);
