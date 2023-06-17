@@ -4,15 +4,26 @@
 #include <random>
 
 
-void factorial_test_only_classic_multiplication(size_t iterations){
+void factorial_test_classic_multiplication(size_t iterations){
     big_int_concrete x = "0";
-    for(int i = 1; i < iterations; ++i){
+    big_int_concrete y = "1";
+    for(int i = 1; i < iterations + 1; ++i){
         cout << "iteration #" << i << " is working..." << endl;
-        big_int_concrete y = "1";
-        for(int j = 1; j < i+1; ++j){
-            big_int_concrete z = to_string(j);
-            y *= z;
-        }
+        big_int_concrete z = to_string(i);
+        y *= z;
+        x += y;
+    }
+    cout << "Result --> " << x << endl;
+}
+
+
+void factorial_test_karatsuba(size_t iterations){
+    big_int_concrete x = "0";
+    big_int_concrete y = "1";
+    for(int i = 1; i < iterations + 1; ++i){
+        cout << "iteration #" << i << " is working..." << endl;
+        big_int_concrete z = to_string(i);
+        y.multiply_karatsuba(z);
         x += y;
     }
     cout << "Result --> " << x << endl;
@@ -65,7 +76,7 @@ void bigint_test(size_t iterations = 100, int seed = 0){
     random_device rd;
     mt19937 generator(rd());
     if(seed != 0) generator.seed(seed);
-    uniform_int_distribution<size_t> distribution_action(0, 10);
+    uniform_int_distribution<size_t> distribution_action(0, 11);
 
     uniform_int_distribution<int> distribution_seed(0, 2000000000);
 
@@ -141,6 +152,13 @@ void bigint_test(size_t iterations = 100, int seed = 0){
                 cout << ">> action '*'" << endl;
                 num3 = num1 * num2;
                 cout << num1 << " * " << num2 << " = " << num3 << endl;
+                break;
+            case 11:
+                cout << ">> action '*' (karatsuba)" << endl;
+                cout << num1;
+                num1.multiply_karatsuba(num2);
+                cout << " * " << num2 << " = " << num1 << endl;
+                break;
             default:
                 break;
         }
@@ -159,11 +177,12 @@ int main(){
 
 // ------- random test -------------------------------------------------------
 
-    bigint_test(150, 69696969);
+//    bigint_test(150, 69696969);
 
-// ------- factorial test (only classic multiplication) ----------------------
+// ------- factorial test ----------------------------------------------------
 
-//    factorial_test_only_classic_multiplication(55);
+    factorial_test_classic_multiplication(30);
+//    factorial_test_karatsuba(30);
 
 // ------- simple tests ------------------------------------------------------
 
